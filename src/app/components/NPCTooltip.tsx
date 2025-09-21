@@ -12,6 +12,7 @@ interface NPCTooltipProps {
         arrowX: number; // X position where arrow should point
     };
     npcs: Map<string, NPC>;
+    happinessFactors?: string[]; // Optional array of happiness factors
 }
 
 function toTitleCase(s: string): string {
@@ -21,7 +22,7 @@ function toTitleCase(s: string): string {
         .join(" ");
 }
 
-export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPCTooltipProps) {
+export default function NPCTooltip({ npc, isDragging, popupPosition, npcs, happinessFactors }: NPCTooltipProps) {
     if (!npc || isDragging) return null;
 
     // Get snake_case version of the NPC name
@@ -111,6 +112,21 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPC
                                 {npcObject.hatedNpcs.map((n) => npcs.get(n)?.name || n).join(", ")}
                             </p>
                         )}
+                    </div>
+                )}
+
+                {/* Display happiness factors if available */}
+                {happinessFactors && happinessFactors.length > 0 && (
+                    <div>
+                        <div className="border-t border-slate-600 my-2"></div>
+                        <div className="font-semibold mb-1">Happiness Factors:</div>
+                        <ul className="list-disc pl-5 text-sm">
+                            {happinessFactors.map((factor, index) => (
+                                <li key={index} className="text-slate-300">
+                                    {factor}
+                                </li>
+                            ))}
+                        </ul>
                     </div>
                 )}
             </div>

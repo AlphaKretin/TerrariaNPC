@@ -19,6 +19,7 @@ export function useTooltip() {
     });
     const hoveredElementRef = useRef<Element | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [happinessFactors, setHappinessFactors] = useState<string[] | undefined>(undefined);
 
     // Function to determine tooltip position accounting for page scroll
     const calculateTooltipPosition = (targetElement: Element): TooltipPosition => {
@@ -53,11 +54,12 @@ export function useTooltip() {
         return { x, y, position, arrowX };
     };
 
-    const handleMouseEnter = (item: string, e: React.MouseEvent) => {
+    const handleMouseEnter = (item: string, e: React.MouseEvent, factors?: string[]) => {
         // Don't show tooltip if currently dragging
         if (isDragging) return;
 
         setHoveredItem(item);
+        setHappinessFactors(factors);
 
         // Calculate tooltip position from the event target
         const newPosition = calculateTooltipPosition(e.currentTarget);
@@ -69,6 +71,7 @@ export function useTooltip() {
 
     const handleMouseLeave = () => {
         setHoveredItem(null);
+        setHappinessFactors(undefined);
         hoveredElementRef.current = null;
     };
 
@@ -152,6 +155,7 @@ export function useTooltip() {
         hoveredItem,
         popupPosition,
         isDragging,
+        happinessFactors,
         setIsDragging,
         handleMouseEnter,
         handleMouseLeave,

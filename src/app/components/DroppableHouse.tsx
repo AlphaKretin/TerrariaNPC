@@ -11,6 +11,7 @@ interface NpcPriceInfo {
     npc: string;
     buyPrice: number;
     sellPrice: number;
+    factors: string[]; // Add happiness factors
 }
 
 interface House {
@@ -50,6 +51,7 @@ export default function DroppableHouse({
         hoveredItem: hoveredNPC,
         popupPosition,
         isDragging,
+        happinessFactors,
         setIsDragging,
         handleMouseEnter: tooltipMouseEnter,
         handleMouseLeave: tooltipMouseLeave,
@@ -92,7 +94,8 @@ export default function DroppableHouse({
 
     // Handle NPC mouse hover events using our shared hook
     const handleNpcMouseEnter = (npc: string, e: React.MouseEvent) => {
-        tooltipMouseEnter(npc, e);
+        const npcInfo = house.npcPrices.find((info) => info.npc === npc);
+        tooltipMouseEnter(npc, e, npcInfo?.factors);
     };
 
     return (
@@ -245,7 +248,13 @@ export default function DroppableHouse({
             )}
 
             {/* Use the shared NPCTooltip component */}
-            <NPCTooltip npc={hoveredNPC} isDragging={isDragging} popupPosition={popupPosition} npcs={npcs} />
+            <NPCTooltip
+                npc={hoveredNPC}
+                isDragging={isDragging}
+                popupPosition={popupPosition}
+                npcs={npcs}
+                happinessFactors={happinessFactors}
+            />
         </div>
     );
 }

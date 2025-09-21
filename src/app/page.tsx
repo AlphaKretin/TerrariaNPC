@@ -10,6 +10,7 @@ interface NpcPriceInfo {
     npc: string;
     buyPrice: number;
     sellPrice: number;
+    factors: string[]; // Add happiness factors
 }
 
 // Define the House type for better TypeScript support
@@ -206,7 +207,7 @@ export default function TerrariaHappinessCalculator() {
             if (neighbours.length < 3) {
                 buyPrice *= 0.95;
                 sellPrice *= 1.05;
-                factors.push(`Solutide bonus: Only ${neighbours.length} neighbours`);
+                factors.push(`Solitude bonus: Only ${neighbours.length} neighbours`);
             }
             if (neighbours.length > 3) {
                 for (let i = neighbours.length; i <= 4; i++) {
@@ -221,22 +222,22 @@ export default function TerrariaHappinessCalculator() {
                 if (neighbourScore === 2) {
                     buyPrice *= 0.88;
                     sellPrice *= 1.14;
-                    factors.push(`Loves ${neighbour}`);
+                    factors.push(`Loves ${npcs.get(neighbour)?.name || neighbour}`);
                 }
                 if (neighbourScore === 1) {
                     buyPrice *= 0.94;
                     sellPrice *= 1.06;
-                    factors.push(`Likes ${neighbour}`);
+                    factors.push(`Likes ${npcs.get(neighbour)?.name || neighbour}`);
                 }
                 if (neighbourScore === -1) {
                     buyPrice *= 1.06;
                     sellPrice *= 0.94;
-                    factors.push(`Dislikes ${neighbour}`);
+                    factors.push(`Dislikes ${npcs.get(neighbour)?.name || neighbour}`);
                 }
                 if (neighbourScore === -2) {
                     buyPrice *= 1.12;
                     sellPrice *= 0.89;
-                    factors.push(`Hates ${neighbour}`);
+                    factors.push(`Hates ${npcs.get(neighbour)?.name || neighbour}`);
                 }
             }
 
@@ -251,11 +252,12 @@ export default function TerrariaHappinessCalculator() {
             if (house.npcPrices && house.npcPrices.length > 0) {
                 // Calculate individual NPC prices
                 const updatedNpcPrices: NpcPriceInfo[] = house.npcPrices.map((npcInfo) => {
-                    const { buyPrice, sellPrice } = calculateSingleNpcPrices(npcInfo.npc, house);
+                    const { buyPrice, sellPrice, factors } = calculateSingleNpcPrices(npcInfo.npc, house);
                     return {
                         npc: npcInfo.npc,
                         buyPrice,
                         sellPrice,
+                        factors,
                     };
                 });
 
@@ -372,7 +374,10 @@ export default function TerrariaHappinessCalculator() {
                     // Add NPC to the house with default prices
                     return {
                         ...house,
-                        npcPrices: [...house.npcPrices, { npc: npcToPlace, buyPrice: 1.0, sellPrice: 1.0 }],
+                        npcPrices: [
+                            ...house.npcPrices,
+                            { npc: npcToPlace, buyPrice: 1.0, sellPrice: 1.0, factors: [] },
+                        ],
                     };
                 }
                 return house;
