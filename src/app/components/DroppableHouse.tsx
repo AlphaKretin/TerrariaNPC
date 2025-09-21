@@ -197,8 +197,8 @@ export default function DroppableHouse({
                                         onMouseLeave={tooltipMouseLeave}
                                     >
                                         <Image
-                                            width={24}
-                                            height={42}
+                                            width={48}
+                                            height={48}
                                             src={`/sprites/${npcInfo.npc}.webp`}
                                             alt={npcInfo.npc}
                                             className="w-full h-full object-contain"

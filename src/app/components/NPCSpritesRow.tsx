@@ -140,8 +140,8 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
                                 >
                                     <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab overflow-hidden">
                                         <Image
-                                            width={24}
-                                            height={42}
+                                            width={48}
+                                            height={48}
                                             src={`/sprites/${npc}.webp`}
                                             alt={npc}
                                             className="w-full h-full object-contain"
