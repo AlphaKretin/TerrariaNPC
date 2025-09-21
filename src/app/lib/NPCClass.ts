@@ -50,8 +50,12 @@ export class NPC {
 
     private getNpcsWithValue(value: number): string[] {
         return Object.entries(this.npcData.npc)
-            .filter(([_, val]) => val === value)
-            .map(([relatedNpc, _]) => relatedNpc);
+            .filter(([, val]) => val === value)
+            .map(([relatedNpc]) => relatedNpc);
+    }
+
+    public getValueForNpc(npc: string): number {
+        return this.npcData.npc[npc] || 0;
     }
 
     /**
@@ -84,9 +88,13 @@ export class NPC {
 
     getBiomeWithValue(value: number): string {
         const biomes = Object.entries(this.npcData.biome)
-            .filter(([_, val]) => value === val)
-            .map(([biome, _]) => biome);
+            .filter(([, val]) => value === val)
+            .map(([biome]) => biome);
         return biomes[0];
+    }
+
+    getValueForBiome(biome: string): number {
+        return this.npcData.biome[biome] || 0;
     }
 
     /**

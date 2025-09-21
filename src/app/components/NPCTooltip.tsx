@@ -25,7 +25,7 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPC
     if (!npc || isDragging) return null;
 
     // Get snake_case version of the NPC name
-    const npcKey = npc.toLowerCase().replace(/\s+/g, "_");
+    const npcKey = npc;
     const npcObject = npcs.get(npcKey);
 
     if (!npcObject) return null;
@@ -73,9 +73,11 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPC
                     <p>
                         <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
                     </p>
-                    <p>
-                        <span className="text-orange-400">Dislikes:</span> {toTitleCase(npcObject.dislikedBiome)}
-                    </p>
+                    {npcObject.dislikedBiome && (
+                        <p>
+                            <span className="text-orange-400">Dislikes:</span> {toTitleCase(npcObject.dislikedBiome)}
+                        </p>
+                    )}
                 </div>
 
                 {npcObject.hasRelationships() && (

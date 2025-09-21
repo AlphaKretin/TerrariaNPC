@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React, { useState } from "react";
 import { useTooltip } from "../hooks/useTooltip";
 import { NPC } from "../lib/NPCClass";
@@ -94,11 +95,6 @@ export default function DroppableHouse({
         tooltipMouseEnter(npc, e);
     };
 
-    // Emergency function to reset dragging state if tooltips get stuck
-    const resetDraggingState = () => {
-        setIsDragging(false);
-    };
-
     return (
         <div
             className={`p-4 rounded-lg shadow-lg border-2 transition-colors ${
@@ -191,13 +187,13 @@ export default function DroppableHouse({
                                 <div className="p-2 flex items-center justify-center">
                                     <div
                                         className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors overflow-hidden"
-                                        onMouseEnter={(e) =>
-                                            handleNpcMouseEnter(npcInfo.npc.toLowerCase().replace(/\s+/g, "_"), e)
-                                        }
+                                        onMouseEnter={(e) => handleNpcMouseEnter(npcInfo.npc, e)}
                                         onMouseLeave={tooltipMouseLeave}
                                     >
-                                        <img
-                                            src={`/sprites/${npcInfo.npc.toLowerCase().replace(/\s+/g, "_")}.webp`}
+                                        <Image
+                                            width={24}
+                                            height={42}
+                                            src={`/sprites/${npcInfo.npc}.webp`}
                                             alt={npcInfo.npc}
                                             className="w-full h-full object-contain"
                                         />

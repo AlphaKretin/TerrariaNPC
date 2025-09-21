@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useTooltip } from "../hooks/useTooltip";
 import { NPC, NpcJson } from "../lib/NPCClass";
@@ -14,14 +15,7 @@ interface NPCSpritesRowProps {
 
 export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }: NPCSpritesRowProps) {
     // Tooltip functionality from our custom hook
-    const {
-        hoveredItem: hoveredNPC,
-        popupPosition,
-        isDragging,
-        setIsDragging,
-        handleMouseEnter,
-        handleMouseLeave,
-    } = useTooltip();
+    const { hoveredItem: hoveredNPC, popupPosition, isDragging, handleMouseEnter, handleMouseLeave } = useTooltip();
 
     const scrollRef = useRef<HTMLDivElement>(null);
     const [isScrolling, setIsScrolling] = useState(false);
@@ -50,17 +44,6 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
         scrollRef.current.scrollLeft = scrollLeft - walk;
     };
 
-    // Helper function to format NPC name
-    const formatNpcName = (id: string): string => {
-        const npcObject = npcs.get(id);
-        return npcObject
-            ? npcObject.name
-            : id
-                  .split("_")
-                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                  .join(" ");
-    };
-
     // Handle cleanup of event listeners
     useEffect(() => {
         const handleMouseUpGlobal = () => {
@@ -87,7 +70,7 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
             >
                 <div className="flex space-x-2 min-w-max p-2">
                     {Object.keys(npcData)
-                        .filter((npc) => !placedNPCs.includes(formatNpcName(npc))) // Filter out already placed NPCs
+                        .filter((npc) => !placedNPCs.includes(npc)) // Filter out already placed NPCs
                         .map((npc) => (
                             <div
                                 key={npc}
@@ -97,13 +80,15 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
                                 draggable
                                 onDragStart={(e) => {
                                     handleMouseLeave(); // Hide any tooltips
-                                    onDragStart(formatNpcName(npc), e);
+                                    onDragStart(npc, e);
                                 }}
                             >
                                 <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab overflow-hidden">
-                                    <img
+                                    <Image
+                                        width={24}
+                                        height={42}
                                         src={`/sprites/${npc}.webp`}
-                                        alt={formatNpcName(npc)}
+                                        alt={npc}
                                         className="w-full h-full object-contain"
                                     />
                                 </div>
