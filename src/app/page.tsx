@@ -54,6 +54,19 @@ export default function TerrariaHappinessCalculator() {
         }
     }, [npcData]);
 
+    // Update total happiness whenever placements change
+    useEffect(() => {
+        if (isLoading || placements.length === 0) return;
+
+        // Calculate total happiness from all houses
+        const total = placements.reduce((sum, house) => {
+            return house.npcHappiness.length > 0 ? sum + house.happiness : sum;
+        }, 0);
+
+        // Update total happiness
+        setTotalHappiness(parseFloat((total || 0).toFixed(2)));
+    }, [placements, isLoading]);
+
     // Recalculate happiness whenever placements change
     useEffect(() => {
         // Skip during initial load or when there are no placements
@@ -90,13 +103,6 @@ export default function TerrariaHappinessCalculator() {
 
         if (hasChanges) {
             setPlacements(updatedPlacements);
-
-            // Calculate total happiness
-            const total = updatedPlacements.reduce((sum, house) => {
-                return house.npcHappiness.length > 0 ? sum + house.happiness : sum;
-            }, 0);
-
-            setTotalHappiness(parseFloat(total.toFixed(2)));
         }
     }, [placements, npcData]);
 

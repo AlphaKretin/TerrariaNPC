@@ -135,13 +135,13 @@ export default function DroppableHouse({
                                     e.dataTransfer.setData("npc", npcInfo.npc);
                                     // Add opacity effect to show element is being dragged
                                     if (e.currentTarget.classList) {
-                                        e.currentTarget.classList.add('opacity-50');
+                                        e.currentTarget.classList.add("opacity-50");
                                     }
                                 }}
                                 onDragEnd={(e) => {
                                     // Remove opacity effect when drag ends
                                     if (e.currentTarget.classList) {
-                                        e.currentTarget.classList.remove('opacity-50');
+                                        e.currentTarget.classList.remove("opacity-50");
                                     }
                                 }}
                             >
