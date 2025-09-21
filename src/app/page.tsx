@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import DroppableHouse, { House } from "./components/DroppableHouse";
 import NPCSpritesRow from "./components/NPCSpritesRow";
+import SaveLoad from "./components/SaveLoad";
 import { NPC, NpcJson } from "./lib/NPCClass";
 import { toTitleCase } from "./utils/formatting";
 
@@ -467,6 +468,18 @@ export default function TerrariaHappinessCalculator() {
         });
     };
 
+    // Load saved layout
+    const handleLoadPlacements = (savedPlacements: House[]) => {
+        // Ensure the nextId is updated to be higher than any house ID in the loaded layout
+        const highestId = savedPlacements.reduce((maxId, house) => Math.max(maxId, house.id), -1);
+
+        // Set the nextId to be one higher than the highest ID in the loaded layout
+        setNextId(highestId + 1);
+
+        // Set the placements to the saved layout
+        setPlacements(savedPlacements);
+    };
+
     // Get price color based on sell price
     const getPriceColor = (sellPrice: number) => {
         if (sellPrice >= 1.15) return "text-green-500";
@@ -501,14 +514,23 @@ export default function TerrariaHappinessCalculator() {
                     npcs={npcs}
                 />
 
-                <div className="flex justify-between items-center mt-6">
-                    <button onClick={addHouse} className="bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded">
-                        Add New House
-                    </button>
+                <div className="flex flex-wrap justify-between items-center mt-6 gap-4">
+                    <div className="flex flex-wrap gap-4">
+                        <button
+                            onClick={addHouse}
+                            className="bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded"
+                        >
+                            Add New House
+                        </button>
 
-                    <div className="text-center p-3 bg-slate-700 rounded-lg">
-                        <div className="text-sm text-slate-300">Average Happiness:</div>
-                        <div className="text-2xl font-bold">{averageHappiness.toFixed(2)}</div>
+                        <div className="text-center p-3 bg-slate-700 rounded-lg">
+                            <div className="text-sm text-slate-300">Average Happiness:</div>
+                            <div className="text-2xl font-bold">{averageHappiness.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    <div className="w-full md:w-auto">
+                        <SaveLoad placements={placements} onLoadPlacements={handleLoadPlacements} />
                     </div>
                 </div>
             </div>
