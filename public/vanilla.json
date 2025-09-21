@@ -287,5 +287,9 @@
             "forest": 1,
             "desert": -1
         }
+    },
+    "princess": {
+        "npc": {},
+        "biome": {}
     }
 }

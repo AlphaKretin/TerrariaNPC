@@ -63,19 +63,32 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs, happi
 
             <div className="text-center mb-2 font-bold text-white">{npcObject.name}</div>
             <div className="gap-2 text-sm">
-                <div className="mb-2">
-                    <div className="font-semibold mb-1">Biome Preferences:</div>
-                    <p>
-                        <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
-                    </p>
-                    {npcObject.dislikedBiome && (
+                {npcKey === "princess" ? (
+                    <div className="mb-2">
+                        <div className="font-semibold mb-1">Special Cases:</div>
+                        <ul className="list-disc pl-5 text-sm">
+                            <li className="text-slate-300">No biome preferences</li>
+                            <li className="text-green-300">Liked by all other NPCs</li>
+                            <li className="text-green-500">Loves up to 3 neighbours</li>
+                            <li className="text-red-400">Hates having fewer than 2 neighbours</li>
+                        </ul>
+                    </div>
+                ) : (
+                    <div className="mb-2">
+                        <div className="font-semibold mb-1">Biome Preferences:</div>
                         <p>
-                            <span className="text-orange-400">Dislikes:</span> {toTitleCase(npcObject.dislikedBiome)}
+                            <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
                         </p>
-                    )}
-                </div>
+                        {npcObject.dislikedBiome && (
+                            <p>
+                                <span className="text-orange-400">Dislikes:</span>{" "}
+                                {toTitleCase(npcObject.dislikedBiome)}
+                            </p>
+                        )}
+                    </div>
+                )}
 
-                {npcObject.hasRelationships() && (
+                {npcObject.hasRelationships() && npcKey !== "princess" && (
                     <div>
                         <div className="border-t border-slate-600 my-2"></div>
                         <div className="font-semibold mb-1">NPC Relationships:</div>

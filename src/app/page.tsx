@@ -61,12 +61,17 @@ export default function TerrariaHappinessCalculator() {
                 // Store the biomes list
                 setBiomes(biomeList);
 
-                // Store the raw JSON data for reference
-                setNpcData(data);
+                // Sort the data alphabetically by keys
+                const sortedData = Object.fromEntries(
+                    Object.entries(data).sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+                );
 
-                // Create NPC objects from the JSON data
+                // Store the sorted JSON data for reference
+                setNpcData(sortedData);
+
+                // Create NPC objects from the sorted JSON data
                 const npcObjects = new Map<string, NPC>();
-                Object.entries(data).forEach(([npcKey, npcData]) => {
+                Object.entries(sortedData).forEach(([npcKey, npcData]) => {
                     npcObjects.set(npcKey, new NPC(npcKey, npcData));
                 });
                 setNpcs(npcObjects);
@@ -220,17 +225,37 @@ export default function TerrariaHappinessCalculator() {
             const neighbours = house.npcPrices.map((p) => p.npc).filter((neighbourNpc) => neighbourNpc !== npc);
 
             // Calculate overcrowding/solitude score
+            if (neighbours.length < 2) {
+                // special case: princess HATES being lonely
+                if (npc === "princess") {
+                    buyPrice = 1.5;
+                    sellPrice = 0.5;
+                    factors.push(`Princess solitude penalty: Only ${neighbours.length} neighbours`);
+                    return { buyPrice, sellPrice, factors };
+                }
+            }
             if (neighbours.length < 3) {
                 buyPrice *= 0.95;
                 sellPrice *= 1.05;
                 factors.push(`Solitude bonus: Only ${neighbours.length} neighbours`);
             }
             if (neighbours.length > 3) {
-                for (let i = neighbours.length; i <= 4; i++) {
+                for (let i = 3; i < neighbours.length; i++) {
                     buyPrice *= 1.05;
                     sellPrice *= 0.95;
                 }
                 factors.push(`Overcrowding penalty: ${neighbours.length} neighbours`);
+            }
+
+            // special case: princess loves any NPC, but only up to 3 neighbours
+            if (npc === "princess") {
+                const loves = Math.min(neighbours.length, 3);
+                for (let i = 0; i < loves; i++) {
+                    const neighbour = neighbours[i];
+                    buyPrice *= 0.88;
+                    sellPrice *= 1.14;
+                    factors.push(`Princess loves up to 3 neighbours (${npcs.get(neighbour)?.name || neighbour})`);
+                }
             }
 
             for (const neighbour of neighbours) {

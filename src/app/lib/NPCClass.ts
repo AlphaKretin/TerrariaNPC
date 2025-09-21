@@ -58,6 +58,10 @@ export class NPC {
     }
 
     public getValueForNpc(npc: string): number {
+        // special case: all NPCs like princess
+        if (npc === "princess") {
+            return 1;
+        }
         return this.npcData.npc[npc] || 0;
     }
 
