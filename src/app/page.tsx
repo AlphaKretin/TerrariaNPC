@@ -16,18 +16,20 @@ type NpcData = {
     };
 };
 
-// Define NPC happiness info type
-interface NpcHappinessInfo {
+// Define NPC price info type
+interface NpcPriceInfo {
     npc: string;
-    happiness: number;
+    buyPrice: number;
+    sellPrice: number;
 }
 
 // Define the House type for better TypeScript support
 interface House {
     id: number;
     biome: string;
-    happiness: number; // Average happiness of all NPCs in the house
-    npcHappiness: NpcHappinessInfo[]; // Individual happiness for each NPC
+    buyPrice: number; // Average buy price of all NPCs in the house
+    sellPrice: number; // Average sell price of all NPCs in the house
+    npcPrices: NpcPriceInfo[]; // Individual prices for each NPC
 }
 
 export default function TerrariaHappinessCalculator() {
@@ -54,52 +56,58 @@ export default function TerrariaHappinessCalculator() {
         }
     }, [npcData]);
 
-    // Update total happiness whenever placements change
+    // Update total sell price modifier whenever placements change
     useEffect(() => {
         if (isLoading || placements.length === 0) return;
 
-        // Calculate total happiness from all houses
+        // Calculate total sell price from all houses
         const total = placements.reduce((sum, house) => {
-            return house.npcHappiness.length > 0 ? sum + house.happiness : sum;
+            return house.npcPrices.length > 0 ? sum + house.sellPrice : sum;
         }, 0);
 
-        // Update total happiness
+        // Update total happiness (now representing total sell price modifier)
         setTotalHappiness(parseFloat((total || 0).toFixed(2)));
     }, [placements, isLoading]);
 
-    // Recalculate happiness whenever placements change
+    // Recalculate prices whenever placements change
     useEffect(() => {
         // Skip during initial load or when there are no placements
         if (isLoading || placements.length === 0) return;
 
-        // Calculate happiness for all placements
+        // Calculate prices for all placements
         const updatedPlacements = placements.map((house) => {
-            // Calculate happiness only if there are NPCs in the house
-            if (house.npcHappiness && house.npcHappiness.length > 0) {
-                // Calculate individual NPC happiness
-                const updatedNpcHappiness: NpcHappinessInfo[] = house.npcHappiness.map((npcInfo) => {
-                    const happiness = calculateSingleNpcHappiness(npcInfo.npc, house, placements);
+            // Calculate prices only if there are NPCs in the house
+            if (house.npcPrices && house.npcPrices.length > 0) {
+                // Calculate individual NPC prices
+                const updatedNpcPrices: NpcPriceInfo[] = house.npcPrices.map((npcInfo) => {
+                    const { buyPrice, sellPrice } = calculateSingleNpcPrices(npcInfo.npc, house, placements);
                     return {
                         npc: npcInfo.npc,
-                        happiness,
+                        buyPrice,
+                        sellPrice,
                     };
                 });
 
-                // Calculate overall house happiness (average)
-                const totalHappiness = updatedNpcHappiness.reduce((sum, info) => sum + info.happiness, 0);
-                const averageHappiness = parseFloat((totalHappiness / updatedNpcHappiness.length).toFixed(2));
+                // Calculate overall house prices (average)
+                const totalBuyPrice = updatedNpcPrices.reduce((sum, info) => sum + info.buyPrice, 0);
+                const totalSellPrice = updatedNpcPrices.reduce((sum, info) => sum + info.sellPrice, 0);
+                const averageBuyPrice = parseFloat((totalBuyPrice / updatedNpcPrices.length).toFixed(2));
+                const averageSellPrice = parseFloat((totalSellPrice / updatedNpcPrices.length).toFixed(2));
 
                 return {
                     ...house,
-                    happiness: averageHappiness,
-                    npcHappiness: updatedNpcHappiness,
+                    buyPrice: averageBuyPrice,
+                    sellPrice: averageSellPrice,
+                    npcPrices: updatedNpcPrices,
                 };
             }
             return house;
         });
 
-        // Only update if happiness values have changed
-        const hasChanges = updatedPlacements.some((house, i) => house.happiness !== placements[i].happiness);
+        // Only update if price values have changed
+        const hasChanges = updatedPlacements.some(
+            (house, i) => house.buyPrice !== placements[i].buyPrice || house.sellPrice !== placements[i].sellPrice
+        );
 
         if (hasChanges) {
             setPlacements(updatedPlacements);
@@ -307,8 +315,9 @@ export default function TerrariaHappinessCalculator() {
             initialHouses.push({
                 id: i,
                 biome: nextBiome,
-                happiness: 1.0,
-                npcHappiness: [],
+                buyPrice: 1.0,
+                sellPrice: 1.0,
+                npcPrices: [],
             });
         }
         setPlacements(initialHouses);
@@ -326,8 +335,9 @@ export default function TerrariaHappinessCalculator() {
             const newHouse: House = {
                 id: nextId,
                 biome: nextBiome,
-                happiness: 1.0,
-                npcHappiness: [],
+                buyPrice: 1.0,
+                sellPrice: 1.0,
+                npcPrices: [],
             };
 
             const newPlacements = [...prevPlacements, newHouse];
@@ -354,52 +364,52 @@ export default function TerrariaHappinessCalculator() {
         });
     };
 
-    // Calculate happiness for a single NPC
-    const calculateSingleNpcHappiness = (npc: string, house: House, currentPlacements = placements) => {
+    // Calculate prices for a single NPC
+    const calculateSingleNpcPrices = (npc: string, house: House, currentPlacements = placements) => {
         // Get the snake_case version of the NPC name to use as key in npcData
         const npcKey = toSnakeCase(npc);
-        if (!npc || !npcData[npcKey]) return 1.0;
+        if (!npc || !npcData[npcKey]) return { buyPrice: 1.0, sellPrice: 1.0 };
 
-        let happiness = 1.0;
+        let priceMultiplier = 1.0;
 
-        // Biome happiness modifiers
+        // Biome price modifiers
         // Check if the biome exists in the NPC's biome preferences
         const lowercaseBiome = house.biome.toLowerCase();
         if (npcData[npcKey].biome && npcData[npcKey].biome[lowercaseBiome] !== undefined) {
             const biomeValue = npcData[npcKey].biome[lowercaseBiome];
 
-            // Apply happiness modifications based on biome value
+            // Apply price modifications based on biome value
             if (biomeValue === 1) {
                 // Loved biome (value = 1)
-                happiness *= 0.94;
+                priceMultiplier *= 0.94;
             } else if (biomeValue === -1) {
                 // Hated biome (value = -1)
-                happiness *= 1.12;
+                priceMultiplier *= 1.12;
             }
         } else {
             // For biomes not explicitly listed in preferences,
-            // They are neutral - no happiness modification needed
+            // They are neutral - no price modification needed
             // Let's keep a default behavior just in case
             const neutralBiomes = getNeutralBiomes(npcKey);
             if (neutralBiomes.includes(house.biome)) {
-                // No change to happiness for neutral biomes
+                // No change to prices for neutral biomes
             }
         }
 
         // Special case for Princess
         if (npc === "Princess") {
             // The Princess likes all biomes except hated ones
-            if (house.biome !== "None") happiness *= 0.94;
+            if (house.biome !== "None") priceMultiplier *= 0.94;
         }
 
-        // Happiness modifiers based on other NPCs in the same house (internal neighbors)
-        const otherNpcsInHouse = house.npcHappiness.filter((info) => info.npc !== npc).map((info) => info.npc);
+        // Price modifiers based on other NPCs in the same house (internal neighbors)
+        const otherNpcsInHouse = house.npcPrices.filter((info) => info.npc !== npc).map((info) => info.npc);
         otherNpcsInHouse.forEach((otherNpc) => {
             const otherNpcKey = toSnakeCase(otherNpc);
 
             // Special case for Princess who likes all NPCs
             if (npc === "Princess") {
-                happiness *= 0.94;
+                priceMultiplier *= 0.94;
                 return;
             }
 
@@ -409,24 +419,24 @@ export default function TerrariaHappinessCalculator() {
 
                 if (relationValue > 0) {
                     // Positive relationship (likes/loves) - stronger effect for same house
-                    happiness *= 0.9; // Stronger effect than external neighbors
+                    priceMultiplier *= 0.9; // Stronger effect than external neighbors
                 } else if (relationValue < 0) {
                     // Negative relationship (dislikes/hates) - stronger effect for same house
-                    happiness *= 1.1; // Stronger effect than external neighbors
+                    priceMultiplier *= 1.1; // Stronger effect than external neighbors
                 }
             }
         });
 
-        // External neighbor happiness modifiers (NPCs in nearby houses)
+        // External neighbor price modifiers (NPCs in nearby houses)
         const neighbors = findNeighbors(house.id, currentPlacements);
         neighbors.forEach((neighbor) => {
             // Loop through each NPC in the neighbor house
-            neighbor.npcHappiness.forEach((neighborInfo) => {
+            neighbor.npcPrices.forEach((neighborInfo) => {
                 const neighborKey = toSnakeCase(neighborInfo.npc);
 
                 // Special case for Princess who likes all NPCs
                 if (npc === "Princess") {
-                    happiness *= 0.94;
+                    priceMultiplier *= 0.94;
                     return;
                 }
 
@@ -436,10 +446,10 @@ export default function TerrariaHappinessCalculator() {
 
                     if (relationValue > 0) {
                         // Positive relationship (likes/loves)
-                        happiness *= 0.94;
+                        priceMultiplier *= 0.94;
                     } else if (relationValue < 0) {
                         // Negative relationship (dislikes/hates)
-                        happiness *= 1.06;
+                        priceMultiplier *= 1.06;
                     }
                 }
             });
@@ -447,23 +457,40 @@ export default function TerrariaHappinessCalculator() {
 
         // Add crowding penalty if applicable
         const crowdingPenalty = calculateCrowdingPenalty(house.id, currentPlacements);
-        happiness *= 1 + crowdingPenalty * 0.06;
+        priceMultiplier *= 1 + crowdingPenalty * 0.06;
 
-        return parseFloat(happiness.toFixed(2));
+        // Calculate buy and sell prices
+        // In Terraria, buy price = 1.0 + happiness * 0.5
+        // Sell price = 0.75 + happiness * 0.25 (this is the opposite of the happiness factor)
+        const buyPrice = parseFloat((1.0 + priceMultiplier * 0.5).toFixed(2));
+        const sellPrice = parseFloat((0.75 + (2.0 - priceMultiplier) * 0.25).toFixed(2));
+
+        return { buyPrice, sellPrice };
     };
 
-    // Calculate overall happiness for a house with multiple NPCs
-    const calculateHappiness = (house: House, currentPlacements: House[]) => {
-        if (house.npcHappiness.length === 0) return 1.0;
+    // Calculate overall prices for a house with multiple NPCs
+    const calculatePrices = (house: House, currentPlacements: House[]) => {
+        if (house.npcPrices.length === 0) return { buyPrice: 1.0, sellPrice: 1.0 };
 
-        // Calculate happiness for each NPC in the house
-        const happinessValues = house.npcHappiness.map((npcInfo) =>
-            calculateSingleNpcHappiness(npcInfo.npc, house, currentPlacements)
+        // Calculate prices for each NPC in the house
+        const priceValues = house.npcPrices.map((npcInfo) =>
+            calculateSingleNpcPrices(npcInfo.npc, house, currentPlacements)
         );
 
-        // Calculate the average happiness of all NPCs in the house
-        const totalHappiness = happinessValues.reduce((sum: number, h: number) => sum + h, 0);
-        return parseFloat((totalHappiness / happinessValues.length).toFixed(2));
+        // Calculate the average buy and sell prices of all NPCs in the house
+        const totalBuyPrice = priceValues.reduce(
+            (sum: number, price: { buyPrice: number; sellPrice: number }) => sum + price.buyPrice,
+            0
+        );
+        const totalSellPrice = priceValues.reduce(
+            (sum: number, price: { buyPrice: number; sellPrice: number }) => sum + price.sellPrice,
+            0
+        );
+
+        const avgBuyPrice = parseFloat((totalBuyPrice / priceValues.length).toFixed(2));
+        const avgSellPrice = parseFloat((totalSellPrice / priceValues.length).toFixed(2));
+
+        return { buyPrice: avgBuyPrice, sellPrice: avgSellPrice };
     };
 
     // Find neighbors for a house
@@ -483,7 +510,7 @@ export default function TerrariaHappinessCalculator() {
         // Check left neighbor (if exists)
         if (currentHouseIndex > 0) {
             const leftNeighbor = sortedPlacements[currentHouseIndex - 1];
-            if (leftNeighbor.npcHappiness && leftNeighbor.npcHappiness.length > 0) {
+            if (leftNeighbor.npcPrices && leftNeighbor.npcPrices.length > 0) {
                 neighbors.push(leftNeighbor);
             }
         }
@@ -491,7 +518,7 @@ export default function TerrariaHappinessCalculator() {
         // Check right neighbor (if exists)
         if (currentHouseIndex < sortedPlacements.length - 1) {
             const rightNeighbor = sortedPlacements[currentHouseIndex + 1];
-            if (rightNeighbor.npcHappiness && rightNeighbor.npcHappiness.length > 0) {
+            if (rightNeighbor.npcPrices && rightNeighbor.npcPrices.length > 0) {
                 neighbors.push(rightNeighbor);
             }
         }
@@ -516,13 +543,9 @@ export default function TerrariaHappinessCalculator() {
 
         let npcCount = 0;
         for (let i = minIndex; i <= maxIndex; i++) {
-            if (
-                sortedPlacements[i] &&
-                sortedPlacements[i].npcHappiness.length > 0 &&
-                sortedPlacements[i].id !== houseId
-            ) {
+            if (sortedPlacements[i] && sortedPlacements[i].npcPrices.length > 0 && sortedPlacements[i].id !== houseId) {
                 // Count all NPCs in nearby houses
-                npcCount += sortedPlacements[i].npcHappiness.length;
+                npcCount += sortedPlacements[i].npcPrices.length;
             }
         }
 
@@ -531,11 +554,11 @@ export default function TerrariaHappinessCalculator() {
 
     // Calculate happiness for all placements without modifying state
     // This function can be used for calculations but doesn't update state
-    const calculateAllHappiness = (currentPlacements: House[]) => {
+    const calculateAllPrices = (currentPlacements: House[]) => {
         return currentPlacements.map((house: House) => {
-            if (house.npcHappiness.length > 0) {
-                const happiness = calculateHappiness(house, currentPlacements);
-                return { ...house, happiness };
+            if (house.npcPrices.length > 0) {
+                const { buyPrice, sellPrice } = calculatePrices(house, currentPlacements);
+                return { ...house, buyPrice, sellPrice };
             }
             return house;
         });
@@ -561,7 +584,7 @@ export default function TerrariaHappinessCalculator() {
 
             // Check if the NPC is already placed in any house
             const existingHouseIndex = prevPlacements.findIndex((house: House) =>
-                house.npcHappiness.some((info) => info.npc === npcToPlace)
+                house.npcPrices.some((info) => info.npc === npcToPlace)
             );
 
             // Create a copy of the placements to work with
@@ -571,12 +594,12 @@ export default function TerrariaHappinessCalculator() {
             if (existingHouseIndex !== -1 && prevPlacements[existingHouseIndex].id !== houseId) {
                 newPlacements = newPlacements.map((house: House, index: number) => {
                     if (index === existingHouseIndex) {
-                        // Remove NPC from the previous house's happiness array
-                        const updatedNpcHappiness = house.npcHappiness.filter((info) => info.npc !== npcToPlace);
+                        // Remove NPC from the previous house's prices array
+                        const updatedNpcPrices = house.npcPrices.filter((info) => info.npc !== npcToPlace);
 
                         return {
                             ...house,
-                            npcHappiness: updatedNpcHappiness,
+                            npcPrices: updatedNpcPrices,
                         };
                     }
                     return house;
@@ -585,11 +608,11 @@ export default function TerrariaHappinessCalculator() {
 
             // Now add the NPC to the target house if it's not already there
             return newPlacements.map((house: House) => {
-                if (house.id === houseId && !house.npcHappiness.some((info) => info.npc === npcToPlace)) {
-                    // Add NPC to the house with default happiness
+                if (house.id === houseId && !house.npcPrices.some((info) => info.npc === npcToPlace)) {
+                    // Add NPC to the house with default prices
                     return {
                         ...house,
-                        npcHappiness: [...house.npcHappiness, { npc: npcToPlace, happiness: 1.0 }],
+                        npcPrices: [...house.npcPrices, { npc: npcToPlace, buyPrice: 1.0, sellPrice: 1.0 }],
                     };
                 }
                 return house;
@@ -627,14 +650,15 @@ export default function TerrariaHappinessCalculator() {
             if (npcToRemove) {
                 return prevPlacements.map((house: House) => {
                     if (house.id === houseId) {
-                        // Update the npcHappiness array to remove the NPC
-                        const updatedNpcHappiness = house.npcHappiness.filter((info) => info.npc !== npcToRemove);
+                        // Update the npcPrices array to remove the NPC
+                        const updatedNpcPrices = house.npcPrices.filter((info) => info.npc !== npcToRemove);
 
                         return {
                             ...house,
-                            npcHappiness: updatedNpcHappiness,
-                            // If all NPCs were removed, reset happiness
-                            happiness: updatedNpcHappiness.length > 0 ? house.happiness : 1.0,
+                            npcPrices: updatedNpcPrices,
+                            // If all NPCs were removed, reset prices
+                            buyPrice: updatedNpcPrices.length > 0 ? house.buyPrice : 1.0,
+                            sellPrice: updatedNpcPrices.length > 0 ? house.sellPrice : 1.0,
                         };
                     }
                     return house;
@@ -646,8 +670,9 @@ export default function TerrariaHappinessCalculator() {
                     if (house.id === houseId) {
                         return {
                             ...house,
-                            npcHappiness: [],
-                            happiness: 1.0,
+                            npcPrices: [],
+                            buyPrice: 1.0,
+                            sellPrice: 1.0,
                         };
                     }
                     return house;
@@ -656,27 +681,21 @@ export default function TerrariaHappinessCalculator() {
         });
     };
 
-    // Calculate pricing modifier based on happiness
-    const calculatePriceModifier = (happiness: number) => {
-        // Terraria formula: 0.75 + happiness * 0.25
-        return (0.75 + happiness * 0.25).toFixed(2);
-    };
-
-    // Get happiness description
-    const getHappinessDescription = (happiness: number) => {
-        if (happiness <= 0.85) return "Loves it here";
-        if (happiness <= 0.95) return "Likes it here";
-        if (happiness <= 1.05) return "Content";
-        if (happiness <= 1.15) return "Dislikes it here";
+    // Get price description based on sell price
+    const getPriceDescription = (sellPrice: number) => {
+        if (sellPrice >= 1.15) return "Loves it here";
+        if (sellPrice >= 1.05) return "Likes it here";
+        if (sellPrice >= 0.95) return "Content";
+        if (sellPrice >= 0.85) return "Dislikes it here";
         return "Hates it here";
     };
 
-    // Get happiness color
-    const getHappinessColor = (happiness: number) => {
-        if (happiness <= 0.85) return "text-green-500";
-        if (happiness <= 0.95) return "text-green-400";
-        if (happiness <= 1.05) return "text-yellow-400";
-        if (happiness <= 1.15) return "text-orange-400";
+    // Get price color based on sell price
+    const getPriceColor = (sellPrice: number) => {
+        if (sellPrice >= 1.15) return "text-green-500";
+        if (sellPrice >= 1.05) return "text-green-400";
+        if (sellPrice >= 0.95) return "text-yellow-400";
+        if (sellPrice >= 0.85) return "text-orange-400";
         return "text-red-500";
     };
 
@@ -700,7 +719,7 @@ export default function TerrariaHappinessCalculator() {
                 {/* NPC Sprites Row - Draggable */}
                 <NPCSpritesRow
                     npcData={npcData}
-                    placedNPCs={placements.flatMap((house) => house.npcHappiness.map((info) => info.npc))}
+                    placedNPCs={placements.flatMap((house) => house.npcPrices.map((info) => info.npc))}
                     onDragStart={(npc, e) => handleNpcDragStart(npc, e)}
                     formatNpcName={formatNpcName}
                     getLovedBiome={(npc) => getLovedBiome(toSnakeCase(npc))}
@@ -737,9 +756,8 @@ export default function TerrariaHappinessCalculator() {
                             onChangeBiome={(houseId, biome) => changeBiome(houseId, biome)}
                             onRemoveHouse={(houseId) => removeHouse(houseId)}
                             onRemoveNPC={(houseId, npc) => removeNPC(houseId, npc)}
-                            calculatePriceModifier={calculatePriceModifier}
-                            getHappinessDescription={getHappinessDescription}
-                            getHappinessColor={getHappinessColor}
+                            getPriceDescription={getPriceDescription}
+                            getPriceColor={getPriceColor}
                         />
                     ))}
             </div>

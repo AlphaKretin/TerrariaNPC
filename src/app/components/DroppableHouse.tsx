@@ -2,17 +2,19 @@
 
 import React, { useState } from "react";
 
-// NPC happiness information
-interface NpcHappinessInfo {
+// NPC price information
+interface NpcPriceInfo {
     npc: string;
-    happiness: number;
+    buyPrice: number;
+    sellPrice: number;
 }
 
 interface House {
     id: number;
     biome: string;
-    happiness: number; // Average happiness of all NPCs in the house
-    npcHappiness: NpcHappinessInfo[]; // Individual happiness for each NPC
+    buyPrice: number; // Average buy price of all NPCs in the house
+    sellPrice: number; // Average sell price of all NPCs in the house
+    npcPrices: NpcPriceInfo[]; // Individual prices for each NPC
 }
 
 interface DroppableHouseProps {
@@ -22,9 +24,8 @@ interface DroppableHouseProps {
     onChangeBiome: (houseId: number, biome: string) => void;
     onRemoveHouse: (houseId: number) => void;
     onRemoveNPC: (houseId: number, npc?: string) => void; // Optional NPC parameter for removing one or all NPCs
-    calculatePriceModifier: (happiness: number) => string;
-    getHappinessDescription: (happiness: number) => string;
-    getHappinessColor: (happiness: number) => string;
+    getPriceDescription: (sellPrice: number) => string;
+    getPriceColor: (sellPrice: number) => string;
 }
 
 export default function DroppableHouse({
@@ -34,9 +35,8 @@ export default function DroppableHouse({
     onChangeBiome,
     onRemoveHouse,
     onRemoveNPC,
-    calculatePriceModifier,
-    getHappinessDescription,
-    getHappinessColor,
+    getPriceDescription,
+    getPriceColor,
 }: DroppableHouseProps) {
     const [isOver, setIsOver] = useState(false);
 
@@ -78,7 +78,7 @@ export default function DroppableHouse({
             className={`p-4 rounded-lg shadow-lg border-2 transition-colors ${
                 isOver
                     ? "bg-blue-800/30 border-blue-500"
-                    : house.npcHappiness.length > 0
+                    : house.npcPrices.length > 0
                     ? "bg-slate-800 border-slate-600"
                     : "bg-slate-800/50 border-slate-700"
             }`}
@@ -113,20 +113,20 @@ export default function DroppableHouse({
                 </select>
             </div>
 
-            {house.npcHappiness.length > 0 ? (
+            {house.npcPrices.length > 0 ? (
                 <div className="bg-slate-700 p-3 rounded mb-3">
                     <div className="flex justify-between items-center mb-2">
                         <div className="font-semibold">
-                            {house.npcHappiness.length} {house.npcHappiness.length === 1 ? "NPC" : "NPCs"}
+                            {house.npcPrices.length} {house.npcPrices.length === 1 ? "NPC" : "NPCs"}
                         </div>
-                        {house.npcHappiness.length > 0 && (
+                        {house.npcPrices.length > 0 && (
                             <button onClick={handleClearHouse} className="text-red-400 text-xs hover:text-red-300">
                                 Clear All
                             </button>
                         )}
                     </div>
                     <div className="flex flex-wrap gap-3 mb-3">
-                        {house.npcHappiness.map((npcInfo) => (
+                        {house.npcPrices.map((npcInfo) => (
                             <div
                                 key={npcInfo.npc}
                                 className="bg-slate-600 rounded-lg flex flex-col items-center w-28 overflow-hidden shadow-md hover:shadow-lg hover:border-blue-400 hover:border transition-all cursor-grab active:cursor-grabbing"
@@ -168,14 +168,18 @@ export default function DroppableHouse({
                                     </div>
                                 </div>
 
-                                {/* NPC Happiness */}
+                                {/* NPC Prices */}
                                 <div className="w-full bg-slate-700 px-2 py-1 text-center">
-                                    <div className={`text-sm font-bold ${getHappinessColor(npcInfo.happiness)}`}>
-                                        {npcInfo.happiness.toFixed(2)}
+                                    <div className="flex justify-between text-xs mb-1">
+                                        <span>Buy:</span>
+                                        <span className="font-bold text-orange-400">
+                                            {npcInfo.buyPrice.toFixed(2)}x
+                                        </span>
                                     </div>
-                                    <div className="text-xs mt-1">
-                                        <span className={npcInfo.happiness < 1.0 ? "text-green-400" : "text-red-400"}>
-                                            {calculatePriceModifier(npcInfo.happiness)}x
+                                    <div className="flex justify-between text-xs">
+                                        <span>Sell:</span>
+                                        <span className={`font-bold ${getPriceColor(npcInfo.sellPrice)}`}>
+                                            {npcInfo.sellPrice.toFixed(2)}x
                                         </span>
                                     </div>
                                 </div>
@@ -188,18 +192,17 @@ export default function DroppableHouse({
                         </div>
                         <div className="bg-slate-800 rounded-lg p-2">
                             <p className="flex justify-between items-center mb-1">
-                                <span>Average Happiness:</span>
-                                <span className={`font-bold ${getHappinessColor(house.happiness)}`}>
-                                    {house.happiness.toFixed(2)}
-                                </span>
+                                <span>Buy Prices:</span>
+                                <span className="font-bold text-orange-400">{house.buyPrice.toFixed(2)}x</span>
                             </p>
                             <p className="flex justify-between items-center">
-                                <span>Average Prices:</span>
-                                <span
-                                    className={`font-bold ${house.happiness < 1.0 ? "text-green-400" : "text-red-400"}`}
-                                >
-                                    {calculatePriceModifier(house.happiness)}x
+                                <span>Sell Prices:</span>
+                                <span className={`font-bold ${getPriceColor(house.sellPrice)}`}>
+                                    {house.sellPrice.toFixed(2)}x
                                 </span>
+                            </p>
+                            <p className="text-xs text-center mt-1 text-slate-400">
+                                {getPriceDescription(house.sellPrice)}
                             </p>
                         </div>
                     </div>
