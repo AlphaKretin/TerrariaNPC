@@ -1,0 +1,59 @@
+{
+    "lumberjack": {
+        "npc": {
+            "squirrel": 1,
+            "dryad": -1,
+            "demolitionist": -2
+        },
+        "biome": {
+            "forest": 2
+        }
+    },
+    "deviantt": {
+        "npc": {
+            "mutant": 2,
+            "abominationn": 1,
+            "zoologist": -1,
+            "angler": -2
+        },
+        "biome": {
+            "space": 2,
+            "jungle": 1,
+            "snow": -1,
+            "desert": -2
+        }
+    },
+    "abominationn": {
+        "npc": {
+            "mutant": 2,
+            "deviantt": 1,
+            "nurse": -2
+        },
+        "biome": {
+            "space": 2,
+            "ocean": 1,
+            "dungeon": -1
+        }
+    },
+    "mutant": {
+        "npc": {
+            "abominationn": 2,
+            "deviantt": 1,
+            "lumberjack": -1
+        },
+        "biome": {
+            "space": 2,
+            "forest": 1,
+            "hallow": -1
+        }
+    },
+    "squirrel": {
+        "npc": {
+            "lumberjack": 1
+        },
+        "biome": {
+            "forest": 2,
+            "underground": -2
+        }
+    }
+}

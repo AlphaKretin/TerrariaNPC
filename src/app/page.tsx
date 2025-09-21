@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import DataSelector, { DataSource } from "./components/DataSelector";
 import DroppableHouse, { House } from "./components/DroppableHouse";
 import NPCSpritesRow from "./components/NPCSpritesRow";
 import SaveLoad from "./components/SaveLoad";
@@ -23,23 +24,68 @@ export default function TerrariaHappinessCalculator() {
     const [isLoading, setIsLoading] = useState(true);
     const [nextId, setNextId] = useState(0); // To track the next available ID for new houses
     const [npcs, setNpcs] = useState<Map<string, NPC>>(new Map());
+    const [dataSources, setDataSources] = useState<DataSource[]>([
+        { id: "calamity", name: "Calamity", enabled: false },
+        { id: "fargos", name: "Fargo's", enabled: false },
+    ]);
+    const initialSetupDone = useRef(false);
 
-    // Load NPC data when component mounts
+    // Handle data source changes
+    const handleDataSourceChange = useCallback((sources: DataSource[]) => {
+        // Set the new data sources state directly - since we're now fully controlling the component
+        setDataSources(sources);
+    }, []);
+
+    // Load NPC data when component mounts or when data sources change
     useEffect(() => {
-        // Function to load NPC data from JSON file
+        // Function to load NPC data from JSON files
         const loadNpcData = async () => {
             try {
-                const response = await fetch("/vanilla.json");
-                if (!response.ok) {
-                    throw new Error(`Failed to load NPC data: ${response.status}`);
-                }
-                const data: NpcJson = await response.json();
+                setIsLoading(true);
 
-                // Extract all biomes from the NPC data
+                // Always load vanilla data as the base
+                const vanillaResponse = await fetch("/data/vanilla.json");
+                if (!vanillaResponse.ok) {
+                    throw new Error(`Failed to load vanilla NPC data: ${vanillaResponse.status}`);
+                }
+                let mergedData: NpcJson = await vanillaResponse.json();
+
+                // Store which NPCs come from which data sources
+                // This helps us know which NPCs to remove when a source is disabled
+                const npcSourceMap = new Map<string, string>();
+
+                // Mark all vanilla NPCs
+                Object.keys(mergedData).forEach((npc) => {
+                    npcSourceMap.set(npc, "vanilla");
+                });
+
+                // Load additional data files based on selected sources
+                for (const source of dataSources) {
+                    if (source.enabled) {
+                        try {
+                            const response = await fetch(`/data/${source.id}.json`);
+                            if (response.ok) {
+                                const additionalData: NpcJson = await response.json();
+                                // Mark all NPCs from this source
+                                Object.keys(additionalData).forEach((npc) => {
+                                    npcSourceMap.set(npc, source.id);
+                                });
+                                // Merge the additional data with the base data
+                                mergedData = { ...mergedData, ...additionalData };
+                            } else {
+                                console.error(`Failed to load ${source.name} data: ${response.status}`);
+                            }
+                        } catch (err) {
+                            console.error(`Error loading ${source.name} data:`, err);
+                        }
+                    }
+                }
+
+                // Extract all biomes from the merged NPC data
                 const extractedBiomes = new Set<string>();
 
                 // Iterate through all NPCs and their biome preferences
-                Object.values(data).forEach((npcPrefs) => {
+                Object.values(mergedData).forEach((npcPrefs) => {
                     if (npcPrefs.biome) {
                         // Add each biome key to the set (this automatically handles duplicates)
                         Object.keys(npcPrefs.biome).forEach((biomeName) => {
@@ -48,7 +94,7 @@ export default function TerrariaHappinessCalculator() {
                     }
                 });
 
-                // Extract biomes from JSON (already lowercase from vanilla.json)
+                // Extract biomes from JSON (already lowercase from json files)
                 let biomeList = Array.from(extractedBiomes).sort();
 
                 // Handle forest biome - make it the first in the list if it exists
@@ -63,7 +109,7 @@ export default function TerrariaHappinessCalculator() {
 
                 // Sort the data alphabetically by keys
                 const sortedData = Object.fromEntries(
-                    Object.entries(data).sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
+                    Object.entries(mergedData).sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
                 );
 
                 // Store the sorted JSON data for reference
@@ -74,7 +120,25 @@ export default function TerrariaHappinessCalculator() {
                 Object.entries(sortedData).forEach(([npcKey, npcData]) => {
                     npcObjects.set(npcKey, new NPC(npcKey, npcData));
                 });
+
+                // Update houses to remove any NPCs that are no longer available
+                // due to disabling a data source
+                setPlacements((prevPlacements) => {
+                    // Preserve the original layout structure
+                    return prevPlacements.map((house) => {
+                        // Filter out NPCs that no longer exist in the npcObjects map
+                        const updatedNpcPrices = house.npcPrices.filter((npcPrice) => npcObjects.has(npcPrice.npc));
+
+                        // Preserve biome and all other house properties
+                        return {
+                            ...house,
+                            npcPrices: updatedNpcPrices,
+                        };
+                    });
+                });
+
                 setNpcs(npcObjects);
+                setIsLoading(false);
             } catch (error) {
                 console.error("Error loading NPC data:", error);
                 // Fallback to empty data if there's an error
@@ -82,7 +146,7 @@ export default function TerrariaHappinessCalculator() {
             }
         };
         loadNpcData();
-    }, []);
+    }, [dataSources]); // Only run when dataSources change
 
     // Find the first unused biome from the biomes list
     const getNextUnusedBiome = useCallback(
@@ -120,8 +184,16 @@ export default function TerrariaHappinessCalculator() {
         [biomes]
     );
 
-    // Initialize houses after NPC data is loaded
+    // Initialize houses after NPC data is loaded, but only if we haven't done it before
     useEffect(() => {
+        // Skip if we've already initialized houses or if we don't have NPC data yet
+        if (initialSetupDone.current || Object.keys(npcData).length === 0) {
+            if (Object.keys(npcData).length > 0) {
+                setIsLoading(false);
+            }
+            return;
+        }
+
         const initializeHouses = (count: number) => {
             const initialHouses: House[] = [];
 
@@ -140,14 +212,19 @@ export default function TerrariaHappinessCalculator() {
                     npcPrices: [],
                 });
             }
-            setPlacements(initialHouses);
-            setNextId(count); // Initialize nextId to be the next available ID
+
+            // Only set the placements if we haven't already set them before
+            if (placements.length === 0) {
+                setPlacements(initialHouses);
+                setNextId(count); // Initialize nextId to be the next available ID
+                initialSetupDone.current = true;
+            }
         };
-        if (Object.keys(npcData).length > 0) {
-            initializeHouses(10); // Start with 10 houses by default
-            setIsLoading(false);
-        }
-    }, [npcData, biomes.length, getNextUnusedBiome]);
+
+        // Initialize with 10 houses by default
+        initializeHouses(10);
+        setIsLoading(false);
+    }, [npcData, biomes, getNextUnusedBiome, placements.length]);
 
     // Update total sell price modifier whenever placements change
     useEffect(() => {
@@ -529,6 +606,10 @@ export default function TerrariaHappinessCalculator() {
                 <h1 className="text-4xl font-bold text-yellow-300 mb-2">Terraria NPC Happiness Simulator</h1>
                 <p className="text-slate-300">Optimize your town layout for the best prices and Pylons!</p>
             </header>
+
+            <div className="mb-8 bg-slate-800 p-6 rounded-lg shadow-lg">
+                <DataSelector dataSources={dataSources} onDataSourceChange={handleDataSourceChange} className="mb-4" />
+            </div>
 
             <div className="mb-8 bg-slate-800 p-6 rounded-lg shadow-lg">
                 {/* NPC Sprites Row - Draggable */}

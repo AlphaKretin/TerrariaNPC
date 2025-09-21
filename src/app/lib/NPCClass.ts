@@ -104,6 +104,10 @@ export class NPC {
         return this.npcData.biome[biome] || 0;
     }
 
+    get lovedBiome(): string {
+        return this.getBiomeWithValue(2);
+    }
+
     /**
      * Get the loved biome (value 1 in JSON)
      */
@@ -116,6 +120,10 @@ export class NPC {
      */
     get dislikedBiome(): string {
         return this.getBiomeWithValue(-1);
+    }
+
+    get hatedBiome(): string {
+        return this.getBiomeWithValue(-2);
     }
 
     /**

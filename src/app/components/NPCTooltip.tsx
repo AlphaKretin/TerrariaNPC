@@ -76,13 +76,25 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs, happi
                 ) : (
                     <div className="mb-2">
                         <div className="font-semibold mb-1">Biome Preferences:</div>
-                        <p>
-                            <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
-                        </p>
+                        {npcObject.lovedBiome && (
+                            <p>
+                                <span className="text-green-500">Loves:</span> {toTitleCase(npcObject.lovedBiome)}
+                            </p>
+                        )}
+                        {npcObject.likedBiome && (
+                            <p>
+                                <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
+                            </p>
+                        )}
                         {npcObject.dislikedBiome && (
                             <p>
                                 <span className="text-orange-400">Dislikes:</span>{" "}
                                 {toTitleCase(npcObject.dislikedBiome)}
+                            </p>
+                        )}
+                        {npcObject.hatedBiome && (
+                            <p>
+                                <span className="text-red-400">Hates:</span> {toTitleCase(npcObject.hatedBiome)}
                             </p>
                         )}
                     </div>
