@@ -173,7 +173,9 @@ export default function DroppableHouse({
                             >
                                 {/* NPC Header */}
                                 <div className="bg-slate-700 w-full px-2 py-1 flex justify-between items-center">
-                                    <span className="font-medium text-sm truncate flex-grow">{npcInfo.npc}</span>
+                                    <span className="font-medium text-sm truncate flex-grow">
+                                        {npcs.get(npcInfo.npc)?.name || npcInfo.npc}
+                                    </span>
                                     <button
                                         onClick={() => handleRemoveNPC(npcInfo.npc)}
                                         className="text-red-400 hover:text-red-300 ml-1 flex-shrink-0"
