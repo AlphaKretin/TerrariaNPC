@@ -25,7 +25,7 @@ interface House {
 
 export default function TerrariaHappinessCalculator() {
     const [placements, setPlacements] = useState<House[]>([]);
-    const [averageHappiness, settAverageHappiness] = useState(0);
+    const [averageHappiness, setAverageHappiness] = useState(0);
     const [npcData, setNpcData] = useState<NpcJson>({});
     const [biomes, setBiomes] = useState<string[]>([]); // Store dynamically extracted biomes
     const [isLoading, setIsLoading] = useState(true);
@@ -166,7 +166,7 @@ export default function TerrariaHappinessCalculator() {
         const avg = total / fullPlacements.length;
 
         // Update total happiness (now representing total sell price modifier)
-        settAverageHappiness(parseFloat((avg || 0).toFixed(2)));
+        setAverageHappiness(parseFloat((avg || 0).toFixed(2)));
     }, [placements, isLoading]);
 
     // Recalculate prices whenever placements change
