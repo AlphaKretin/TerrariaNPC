@@ -1,0 +1,33 @@
+{
+    "sea_king": {
+        "npc": {
+            "pirate": 1,
+            "demolitionist": -1,
+            "angler": -2
+        },
+        "biome": {
+            "ocean": 1,
+            "desert": -1
+        }
+    },
+    "bandit": {
+        "npc": {
+            "goblin_tinkerer": 1,
+            "dryad": -1
+        },
+        "biome": {
+            "desert": 1,
+            "jungle": -1
+        }
+    },
+    "archmage": {
+        "npc": {
+            "wizard": 1,
+            "cyborg": -1
+        },
+        "biome": {
+            "snow": 1,
+            "desert": -1
+        }
+    }
+}

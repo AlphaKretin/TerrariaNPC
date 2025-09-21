@@ -1,0 +1,291 @@
+{
+    "angler": {
+        "npc": {
+            "party_girl": 1,
+            "demolitionist": 1,
+            "tax_collector": 1,
+            "tavernkeep": -2
+        },
+        "biome": {
+            "ocean": 1,
+            "desert": -1
+        }
+    },
+    "arms_dealer": {
+        "npc": {
+            "nurse": 2,
+            "steampunker": 1,
+            "golfer": -1,
+            "demolitionist": -2
+        },
+        "biome": {
+            "desert": 1,
+            "snow": -1
+        }
+    },
+    "clothier": {
+        "npc": {
+            "truffle": 2,
+            "tax_collector": 1,
+            "nurse": -1,
+            "mechanic": -2
+        },
+        "biome": {
+            "underground": 1,
+            "hallow": -1
+        }
+    },
+    "cyborg": {
+        "npc": {
+            "steampunker": 1,
+            "pirate": 1,
+            "stylist": 1,
+            "zoologist": -1,
+            "wizard": -2
+        },
+        "biome": {
+            "snow": 1,
+            "jungle": -1
+        }
+    },
+    "demolitionist": {
+        "npc": {
+            "tavernkeep": 2,
+            "mechanic": 1,
+            "goblin_tinkerer": -1,
+            "arms_dealer": -1
+        },
+        "biome": {
+            "underground": 1,
+            "ocean": -1
+        }
+    },
+    "dryad": {
+        "npc": {
+            "witch_doctor": 1,
+            "truffle": 1,
+            "angler": -1,
+            "golfer": -2
+        },
+        "biome": {
+            "jungle": 1,
+            "desert": -1
+        }
+    },
+    "dye_trader": {
+        "npc": {
+            "arms_dealer": 1,
+            "painter": 1,
+            "steampunker": -1,
+            "pirate": -2
+        },
+        "biome": {
+            "desert": 1,
+            "forest": -1
+        }
+    },
+    "goblin_tinkerer": {
+        "npc": {
+            "mechanic": 2,
+            "dye_trader": 1,
+            "clothier": -1,
+            "stylist": -2
+        },
+        "biome": {
+            "underground": 1,
+            "jungle": -1
+        }
+    },
+    "golfer": {
+        "npc": {
+            "angler": 2,
+            "painter": 1,
+            "merchant": -2,
+            "pirate": -1
+        },
+        "biome": {
+            "forest": 1,
+            "underground": -1
+        }
+    },
+    "guide": {
+        "npc": {
+            "clothier": 1,
+            "zoologist": 1,
+            "steampunker": -1,
+            "painter": -2
+        },
+        "biome": {
+            "forest": 1,
+            "ocean": -1
+        }
+    },
+    "mechanic": {
+        "npc": {
+            "goblin_tinkerer": 2,
+            "cyborg": 1,
+            "arms_dealer": -1,
+            "clothier": -2
+        },
+        "biome": {
+            "snow": 1,
+            "underground": -1
+        }
+    },
+    "merchant": {
+        "npc": {
+            "nurse": 1,
+            "golfer": 1,
+            "tax_collector": -1,
+            "angler": -2
+        },
+        "biome": {
+            "forest": 1,
+            "desert": -1
+        }
+    },
+    "nurse": {
+        "npc": {
+            "arms_dealer": 2,
+            "wizard": 1,
+            "dryad": -1,
+            "party_girl": -1
+        },
+        "biome": {
+            "hallow": 1,
+            "snow": -1
+        }
+    },
+    "painter": {
+        "npc": {
+            "dryad": 2,
+            "party_girl": 1,
+            "truffle": -1,
+            "cyborg": -1
+        },
+        "biome": {
+            "jungle": 1,
+            "forest": -1
+        }
+    },
+    "party_girl": {
+        "npc": {
+            "wizard": 2,
+            "zoologist": 2,
+            "merchant": -1,
+            "tax_collector": -2
+        },
+        "biome": {
+            "hallow": 1,
+            "underground": -1
+        }
+    },
+    "pirate": {
+        "npc": {
+            "angler": 2,
+            "tavernkeep": 1,
+            "stylist": -1,
+            "guide": -2
+        },
+        "biome": {
+            "ocean": 1,
+            "underground": -1
+        }
+    },
+    "steampunker": {
+        "npc": {
+            "cyborg": 2,
+            "painter": 1,
+            "party_girl": -1,
+            "dryad": -1,
+            "wizard": -1
+        },
+        "biome": {
+            "desert": 1,
+            "jungle": -1
+        }
+    },
+    "stylist": {
+        "npc": {
+            "dye_trader": 2,
+            "pirate": 1,
+            "tavernkeep": -1,
+            "goblin_tinkerer": -2
+        },
+        "biome": {
+            "ocean": 1,
+            "snow": -1
+        }
+    },
+    "tavernkeep": {
+        "npc": {
+            "demolitionist": 2,
+            "goblin_tinkerer": 1,
+            "guide": -1,
+            "dye_trader": -2
+        },
+        "biome": {
+            "hallow": 1,
+            "snow": -1
+        }
+    },
+    "tax_collector": {
+        "npc": {
+            "merchant": 2,
+            "party_girl": 1,
+            "demolitionist": -1,
+            "mechanic": -1
+        },
+        "biome": {
+            "snow": 1,
+            "desert": -1
+        }
+    },
+    "truffle": {
+        "npc": {
+            "dryad": 1,
+            "guide": 2,
+            "witch_doctor": -2,
+            "clothier": -1
+        },
+        "biome": {
+            "mushroom": 1
+        }
+    },
+    "witch_doctor": {
+        "npc": {
+            "dryad": 1,
+            "guide": 1,
+            "nurse": -1,
+            "truffle": -2
+        },
+        "biome": {
+            "jungle": 1,
+            "hallow": -1
+        }
+    },
+    "wizard": {
+        "npc": {
+            "golfer": 2,
+            "merchant": 1,
+            "witch_doctor": -1,
+            "cyborg": -2
+        },
+        "biome": {
+            "hallow": 1,
+            "ocean": -1
+        }
+    },
+    "zoologist": {
+        "npc": {
+            "witch_doctor": 2,
+            "golfer": 1,
+            "angler": -1,
+            "arms_dealer": -2
+        },
+        "biome": {
+            "forest": 1,
+            "desert": -1
+        }
+    }
+}
