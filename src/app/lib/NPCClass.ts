@@ -14,6 +14,9 @@ export type NpcJson = {
     [npcKey: string]: NpcData;
 };
 
+// NPCs that don't have shops (can't sell pylons)
+const nonSellingNpcs = ["guide", "angler", "nurse", "tax_collector"];
+
 /**
  * NPC class that encapsulates all NPC-related functionality
  * to avoid prop drilling between components
@@ -121,5 +124,12 @@ export class NPC {
             this.dislikedNpcs.length > 0 ||
             this.hatedNpcs.length > 0
         );
+    }
+
+    /**
+     * Check if an NPC has a shop (can sell items)
+     */
+    hasShop(): boolean {
+        return !nonSellingNpcs.includes(this.id);
     }
 }

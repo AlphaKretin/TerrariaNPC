@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import DroppableHouse from "./components/DroppableHouse";
+import DroppableHouse, { House } from "./components/DroppableHouse";
 import NPCSpritesRow from "./components/NPCSpritesRow";
 import { NPC, NpcJson } from "./lib/NPCClass";
 import { toTitleCase } from "./utils/formatting";
@@ -12,15 +12,6 @@ interface NpcPriceInfo {
     buyPrice: number;
     sellPrice: number;
     factors: string[]; // Add happiness factors
-}
-
-// Define the House type for better TypeScript support
-interface House {
-    id: number;
-    biome: string;
-    buyPrice: number; // Average buy price of all NPCs in the house
-    sellPrice: number; // Average sell price of all NPCs in the house
-    npcPrices: NpcPriceInfo[]; // Individual prices for each NPC
 }
 
 export default function TerrariaHappinessCalculator() {
@@ -171,6 +162,27 @@ export default function TerrariaHappinessCalculator() {
 
     // Recalculate prices whenever placements change
     useEffect(() => {
+        // Check if a house is eligible for a pylon
+        const checkPylonEligibility = (house: House): boolean => {
+            // Must have at least 2 NPCs
+            if (house.npcPrices.length < 2) return false;
+
+            const shopNpcs = house.npcPrices.filter((info) => {
+                const npc = npcs.get(info.npc);
+                return npc && npc.hasShop();
+            });
+
+            if (shopNpcs.length < 1) return false;
+
+            // At least one NPC with a shop must have a buy price of 0.9 or lower
+            const hasDiscountedShopNpc = shopNpcs.some((info) => {
+                const npc = npcs.get(info.npc);
+                return npc && npc.hasShop() && info.buyPrice <= 0.9;
+            });
+
+            return hasDiscountedShopNpc;
+        };
+
         // Calculate prices for a single NPC
         const calculateSingleNpcPrices = (npc: string, house: House) => {
             const npcObject = npcs.get(npc);
@@ -270,12 +282,18 @@ export default function TerrariaHappinessCalculator() {
                 const averageBuyPrice = parseFloat((totalBuyPrice / updatedNpcPrices.length).toFixed(2));
                 const averageSellPrice = parseFloat((totalSellPrice / updatedNpcPrices.length).toFixed(2));
 
-                return {
+                // Check if house is eligible for a pylon
+                const updatedHouse = {
                     ...house,
                     buyPrice: averageBuyPrice,
                     sellPrice: averageSellPrice,
                     npcPrices: updatedNpcPrices,
                 };
+
+                // Check pylon eligibility
+                updatedHouse.isPylonEligible = checkPylonEligibility(updatedHouse);
+
+                return updatedHouse;
             }
             return house;
         });

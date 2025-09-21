@@ -15,12 +15,13 @@ interface NpcPriceInfo {
     factors: string[]; // Add happiness factors
 }
 
-interface House {
+export interface House {
     id: number;
     biome: string;
     buyPrice: number; // Average buy price of all NPCs in the house
     sellPrice: number; // Average sell price of all NPCs in the house
     npcPrices: NpcPriceInfo[]; // Individual prices for each NPC
+    isPylonEligible?: boolean; // Whether this house can buy a pylon
 }
 
 interface DroppableHouseProps {
@@ -115,6 +116,11 @@ export default function DroppableHouse({
             <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">House #{house.id + 1}</h3>
+                    {house.isPylonEligible && (
+                        <div className="w-5 h-5" title="Eligible for Pylon">
+                            <Image src="/pylon.webp" alt="Pylon Eligible" width={20} height={20} />
+                        </div>
+                    )}
                     <button
                         onClick={() => onRemoveHouse(house.id)}
                         className="text-red-400 hover:text-red-300 text-sm"
@@ -124,8 +130,7 @@ export default function DroppableHouse({
                             ×
                         </span>
                     </button>
-                </div>
-
+                </div>{" "}
                 <select
                     value={house.biome}
                     onChange={(e) => onChangeBiome(house.id, e.target.value)}
