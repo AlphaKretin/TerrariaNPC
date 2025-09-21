@@ -206,8 +206,12 @@ export default function NPCSpritesRow({
                                 draggable
                                 onDragStart={(e) => onDragStart(formatNpcName(npc), e)}
                             >
-                                <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab">
-                                    {formatNpcName(npc).substring(0, 3)}
+                                <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab overflow-hidden">
+                                    <img
+                                        src={`/sprites/${npc}.webp`}
+                                        alt={formatNpcName(npc)}
+                                        className="w-full h-full object-contain"
+                                    />
                                 </div>
                             </div>
                         ))}

@@ -159,9 +159,12 @@ export default function DroppableHouse({
 
                                 {/* NPC Sprite */}
                                 <div className="p-2 flex items-center justify-center">
-                                    {/* Placeholder for NPC sprite - replace with actual image later */}
-                                    <div className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors">
-                                        {npcInfo.npc.substring(0, 2)}
+                                    <div className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors overflow-hidden">
+                                        <img
+                                            src={`/sprites/${npcInfo.npc.toLowerCase().replace(/\s+/g, "_")}.webp`}
+                                            alt={npcInfo.npc}
+                                            className="w-full h-full object-contain"
+                                        />
                                     </div>
                                 </div>
 
