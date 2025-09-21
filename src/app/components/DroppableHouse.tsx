@@ -58,6 +58,7 @@ export default function DroppableHouse({
 
         const npc = e.dataTransfer.getData("npc");
         if (npc) {
+            // onChangeNPC will handle removing from previous house if necessary
             onChangeNPC(house.id, npc);
         }
     };
@@ -128,7 +129,21 @@ export default function DroppableHouse({
                         {house.npcHappiness.map((npcInfo) => (
                             <div
                                 key={npcInfo.npc}
-                                className="bg-slate-600 rounded-lg flex flex-col items-center w-28 overflow-hidden shadow-md"
+                                className="bg-slate-600 rounded-lg flex flex-col items-center w-28 overflow-hidden shadow-md hover:shadow-lg hover:border-blue-400 hover:border transition-all cursor-grab active:cursor-grabbing"
+                                draggable
+                                onDragStart={(e) => {
+                                    e.dataTransfer.setData("npc", npcInfo.npc);
+                                    // Add opacity effect to show element is being dragged
+                                    if (e.currentTarget.classList) {
+                                        e.currentTarget.classList.add('opacity-50');
+                                    }
+                                }}
+                                onDragEnd={(e) => {
+                                    // Remove opacity effect when drag ends
+                                    if (e.currentTarget.classList) {
+                                        e.currentTarget.classList.remove('opacity-50');
+                                    }
+                                }}
                             >
                                 {/* NPC Header */}
                                 <div className="bg-slate-700 w-full px-2 py-1 flex justify-between items-center">
@@ -145,7 +160,7 @@ export default function DroppableHouse({
                                 {/* NPC Sprite */}
                                 <div className="p-2 flex items-center justify-center">
                                     {/* Placeholder for NPC sprite - replace with actual image later */}
-                                    <div className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center">
+                                    <div className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors">
                                         {npcInfo.npc.substring(0, 2)}
                                     </div>
                                 </div>
