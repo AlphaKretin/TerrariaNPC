@@ -579,15 +579,6 @@ export default function TerrariaHappinessCalculator() {
         });
     };
 
-    // Get price description based on sell price
-    const getPriceDescription = (sellPrice: number) => {
-        if (sellPrice >= 1.15) return "Loves it here";
-        if (sellPrice >= 1.05) return "Likes it here";
-        if (sellPrice >= 0.95) return "Content";
-        if (sellPrice >= 0.85) return "Dislikes it here";
-        return "Hates it here";
-    };
-
     // Get price color based on sell price
     const getPriceColor = (sellPrice: number) => {
         if (sellPrice >= 1.15) return "text-green-500";
@@ -647,7 +638,6 @@ export default function TerrariaHappinessCalculator() {
                             onChangeBiome={(houseId, biome) => changeBiome(houseId, biome)}
                             onRemoveHouse={(houseId) => removeHouse(houseId)}
                             onRemoveNPC={(houseId, npc) => removeNPC(houseId, npc)}
-                            getPriceDescription={getPriceDescription}
                             getPriceColor={getPriceColor}
                             npcs={npcs}
                         />

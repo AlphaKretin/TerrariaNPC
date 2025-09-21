@@ -27,7 +27,6 @@ interface DroppableHouseProps {
     onChangeBiome: (houseId: number, biome: string) => void;
     onRemoveHouse: (houseId: number) => void;
     onRemoveNPC: (houseId: number, npc?: string) => void; // Optional NPC parameter for removing one or all NPCs
-    getPriceDescription: (sellPrice: number) => string;
     getPriceColor: (sellPrice: number) => string;
     // Collection of NPC objects
     npcs: Map<string, NPC>;
@@ -40,7 +39,6 @@ export default function DroppableHouse({
     onChangeBiome,
     onRemoveHouse,
     onRemoveNPC,
-    getPriceDescription,
     getPriceColor,
     npcs,
 }: DroppableHouseProps) {
@@ -238,9 +236,6 @@ export default function DroppableHouse({
                                 <span className={`font-bold ${getPriceColor(house.sellPrice)}`}>
                                     {house.sellPrice.toFixed(2)}x
                                 </span>
-                            </p>
-                            <p className="text-xs text-center mt-1 text-slate-400">
-                                {getPriceDescription(house.sellPrice)}
                             </p>
                         </div>
                     </div>
