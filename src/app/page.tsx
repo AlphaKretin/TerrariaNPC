@@ -643,14 +643,6 @@ export default function TerrariaHappinessCalculator() {
                         />
                     ))}
             </div>
-
-            <footer className="mt-12 text-center text-slate-400 text-sm">
-                <p>Terraria NPC Happiness Simulator - Based on Terraria 1.4.x mechanics</p>
-                <p className="mt-1">
-                    Note: This is a simplified version of the game mechanics. For exact calculations, refer to the
-                    Terraria Wiki.
-                </p>
-            </footer>
         </div>
     );
 }
