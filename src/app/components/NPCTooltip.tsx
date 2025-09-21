@@ -14,6 +14,13 @@ interface NPCTooltipProps {
     npcs: Map<string, NPC>;
 }
 
+function toTitleCase(s: string): string {
+    return s
+        .split(" ")
+        .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1).toLowerCase() : ""))
+        .join(" ");
+}
+
 export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPCTooltipProps) {
     if (!npc || isDragging) return null;
 
@@ -64,10 +71,10 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPC
                 <div className="mb-2">
                     <div className="font-semibold mb-1">Biome Preferences:</div>
                     <p>
-                        <span className="text-green-300">Likes:</span> {npcObject.likedBiome}
+                        <span className="text-green-300">Likes:</span> {toTitleCase(npcObject.likedBiome)}
                     </p>
                     <p>
-                        <span className="text-orange-400">Dislikes:</span> {npcObject.dislikedBiome}
+                        <span className="text-orange-400">Dislikes:</span> {toTitleCase(npcObject.dislikedBiome)}
                     </p>
                 </div>
 
@@ -77,25 +84,29 @@ export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPC
                         <div className="font-semibold mb-1">NPC Relationships:</div>
                         {npcObject.lovedNpcs.length > 0 && (
                             <p>
-                                <span className="text-green-500">Loves:</span> {npcObject.lovedNpcs.join(", ")}
+                                <span className="text-green-500">Loves:</span>{" "}
+                                {npcObject.lovedNpcs.map((n) => npcs.get(n)?.name || n).join(", ")}
                             </p>
                         )}
 
                         {npcObject.likedNpcs.length > 0 && (
                             <p>
-                                <span className="text-green-300">Likes:</span> {npcObject.likedNpcs.join(", ")}
+                                <span className="text-green-300">Likes:</span>{" "}
+                                {npcObject.likedNpcs.map((n) => npcs.get(n)?.name || n).join(", ")}
                             </p>
                         )}
 
                         {npcObject.dislikedNpcs.length > 0 && (
                             <p>
-                                <span className="text-orange-400">Dislikes:</span> {npcObject.dislikedNpcs.join(", ")}
+                                <span className="text-orange-400">Dislikes:</span>{" "}
+                                {npcObject.dislikedNpcs.map((n) => npcs.get(n)?.name || n).join(", ")}
                             </p>
                         )}
 
                         {npcObject.hatedNpcs.length > 0 && (
                             <p>
-                                <span className="text-red-400">Hates:</span> {npcObject.hatedNpcs.join(", ")}
+                                <span className="text-red-400">Hates:</span>{" "}
+                                {npcObject.hatedNpcs.map((n) => npcs.get(n)?.name || n).join(", ")}
                             </p>
                         )}
                     </div>
