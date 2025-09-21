@@ -18,9 +18,11 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
     const { hoveredItem: hoveredNPC, popupPosition, isDragging, handleMouseEnter, handleMouseLeave } = useTooltip();
 
     const scrollRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [isScrolling, setIsScrolling] = useState(false);
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
+    const [isSticky, setIsSticky] = useState(false);
 
     // For horizontal scrolling by mouse drag
     const handleMouseDown = (e: React.MouseEvent) => {
@@ -57,48 +59,104 @@ export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }
         };
     }, []);
 
-    return (
-        <div className="mb-6">
-            <h2 className="text-xl font-bold mb-2 text-white">Available NPCs:</h2>
-            <div
-                ref={scrollRef}
-                className="flex overflow-x-auto pb-2 cursor-grab"
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseUp}
-            >
-                <div className="flex space-x-2 min-w-max p-2">
-                    {Object.keys(npcData)
-                        .filter((npc) => !placedNPCs.includes(npc)) // Filter out already placed NPCs
-                        .map((npc) => (
-                            <div
-                                key={npc}
-                                className="relative flex-shrink-0"
-                                onMouseEnter={(e) => handleMouseEnter(npc, e)}
-                                onMouseLeave={handleMouseLeave}
-                                draggable
-                                onDragStart={(e) => {
-                                    handleMouseLeave(); // Hide any tooltips
-                                    onDragStart(npc, e);
-                                }}
-                            >
-                                <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab overflow-hidden">
-                                    <Image
-                                        width={24}
-                                        height={42}
-                                        src={`/sprites/${npc}.webp`}
-                                        alt={npc}
-                                        className="w-full h-full object-contain"
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                </div>
-            </div>
+    // Track container width for when the component becomes sticky
+    const [containerWidth, setContainerWidth] = useState<number | undefined>(undefined);
 
-            {/* Use the shared NPCTooltip component */}
-            <NPCTooltip npc={hoveredNPC} isDragging={isDragging} popupPosition={popupPosition} npcs={npcs} />
+    // Add scroll event listener to track when the component should become sticky
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!containerRef.current) return;
+
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const shouldBeSticky = containerRect.top <= 0;
+
+            if (shouldBeSticky !== isSticky) {
+                setIsSticky(shouldBeSticky);
+
+                // If becoming sticky, save the container width
+                if (shouldBeSticky && !isSticky) {
+                    setContainerWidth(containerRef.current.offsetWidth);
+                }
+            }
+        };
+
+        // Also handle resize events to update the width when window size changes
+        const handleResize = () => {
+            if (containerRef.current && isSticky) {
+                setContainerWidth(containerRef.current.offsetWidth);
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("resize", handleResize);
+        handleScroll(); // Initial check
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [isSticky]);
+
+    return (
+        <div ref={containerRef} className="mb-6">
+            <div
+                className={`${
+                    isSticky
+                        ? "fixed top-0 left-0 right-0 bg-slate-800 z-50 shadow-lg px-3 sm:px-6 py-4 transition-all duration-300 border-b border-slate-700"
+                        : ""
+                }`}
+                style={isSticky ? { maxWidth: "100%", margin: "0 auto" } : undefined}
+            >
+                <h2
+                    className={`text-xl font-bold mb-2 ${
+                        isSticky ? "text-yellow-300" : "text-white"
+                    } transition-colors duration-300`}
+                >
+                    Available NPCs{" "}
+                    {isSticky && <span className="text-sm font-normal text-slate-300">(scroll to view all)</span>}
+                </h2>
+                <div
+                    ref={scrollRef}
+                    className="flex overflow-x-auto pb-2 cursor-grab"
+                    onMouseDown={handleMouseDown}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseUp}
+                >
+                    <div className="flex space-x-2 min-w-max p-2">
+                        {Object.keys(npcData)
+                            .filter((npc) => !placedNPCs.includes(npc)) // Filter out already placed NPCs
+                            .map((npc) => (
+                                <div
+                                    key={npc}
+                                    className="relative flex-shrink-0"
+                                    onMouseEnter={(e) => handleMouseEnter(npc, e)}
+                                    onMouseLeave={handleMouseLeave}
+                                    draggable
+                                    onDragStart={(e) => {
+                                        handleMouseLeave(); // Hide any tooltips
+                                        onDragStart(npc, e);
+                                    }}
+                                >
+                                    <div className="w-16 h-16 bg-slate-700 rounded-lg flex items-center justify-center text-center border-2 border-slate-600 hover:border-blue-400 cursor-grab overflow-hidden">
+                                        <Image
+                                            width={24}
+                                            height={42}
+                                            src={`/sprites/${npc}.webp`}
+                                            alt={npc}
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+
+                {/* Use the shared NPCTooltip component */}
+                <NPCTooltip npc={hoveredNPC} isDragging={isDragging} popupPosition={popupPosition} npcs={npcs} />
+            </div>
+            {/* Add a placeholder when the row is sticky to maintain layout */}
+            {isSticky && <div className="h-[120px]"></div>}
         </div>
     );
 }
