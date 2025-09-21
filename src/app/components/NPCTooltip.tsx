@@ -1,6 +1,7 @@
 "use client";
 
 import { NPC } from "../lib/NPCClass";
+import { toTitleCase } from "../utils/formatting";
 
 interface NPCTooltipProps {
     npc: string | null;
@@ -13,13 +14,6 @@ interface NPCTooltipProps {
     };
     npcs: Map<string, NPC>;
     happinessFactors?: string[]; // Optional array of happiness factors
-}
-
-function toTitleCase(s: string): string {
-    return s
-        .split(" ")
-        .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1).toLowerCase() : ""))
-        .join(" ");
 }
 
 export default function NPCTooltip({ npc, isDragging, popupPosition, npcs, happinessFactors }: NPCTooltipProps) {

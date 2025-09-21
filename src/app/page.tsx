@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import DroppableHouse from "./components/DroppableHouse";
 import NPCSpritesRow from "./components/NPCSpritesRow";
 import { NPC, NpcJson } from "./lib/NPCClass";
+import { toTitleCase } from "./utils/formatting";
 
 // Define NPC price info type
 interface NpcPriceInfo {
@@ -55,17 +56,14 @@ export default function TerrariaHappinessCalculator() {
                     }
                 });
 
-                // Convert to array, sort alphabetically, and capitalize first letter of each biome
-                let biomeList = Array.from(extractedBiomes)
-                    .sort()
-                    .map((biomeName) => biomeName.charAt(0).toUpperCase() + biomeName.slice(1));
+                // Extract biomes from JSON (already lowercase from vanilla.json)
+                let biomeList = Array.from(extractedBiomes).sort();
 
-                // Handle Forest biome - make it the first in the list if it exists
-                // or add it if it doesn't exist
-                const forestIndex = biomeList.findIndex((biome) => biome === "Forest");
+                // Handle forest biome - make it the first in the list if it exists
+                const forestIndex = biomeList.findIndex((biome) => biome === "forest");
                 if (forestIndex !== -1) {
                     // Forest exists, move it to the first position
-                    biomeList = ["Forest", ...biomeList.slice(0, forestIndex), ...biomeList.slice(forestIndex + 1)];
+                    biomeList = ["forest", ...biomeList.slice(0, forestIndex), ...biomeList.slice(forestIndex + 1)];
                 }
 
                 // Store the biomes list
@@ -180,27 +178,30 @@ export default function TerrariaHappinessCalculator() {
             if (!npc || !npcObject) return { buyPrice, sellPrice, factors };
 
             const biomeScore = npcObject.getValueForBiome(house.biome);
+
+            // Use the shared toTitleCase function for consistent display
+            const displayBiome = toTitleCase(house.biome);
+
             if (biomeScore === 2) {
                 buyPrice *= 0.88;
                 sellPrice *= 1.14;
-                factors.push(`Loves ${house.biome} biome`);
+                factors.push(`Loves ${displayBiome} biome`);
             }
             if (biomeScore === 1) {
                 buyPrice *= 0.94;
                 sellPrice *= 1.06;
-                factors.push(`Likes ${house.biome} biome`);
+                factors.push(`Likes ${displayBiome} biome`);
             }
             if (biomeScore === -1) {
                 buyPrice *= 1.06;
                 sellPrice *= 0.94;
-                factors.push(`Dislikes ${house.biome} biome`);
+                factors.push(`Dislikes ${displayBiome} biome`);
             }
             if (biomeScore === -2) {
                 buyPrice *= 1.12;
                 sellPrice *= 0.89;
-                factors.push(`Hates ${house.biome} biome`);
+                factors.push(`Hates ${displayBiome} biome`);
             }
-
             const neighbours = house.npcPrices.map((p) => p.npc).filter((neighbourNpc) => neighbourNpc !== npc);
 
             // Calculate overcrowding/solitude score
@@ -294,7 +295,7 @@ export default function TerrariaHappinessCalculator() {
             // Get the next unused biome based on current house distribution
             const nextBiome = getNextUnusedBiome(prevPlacements);
 
-            // Create new house with the current nextId and the next unused biome
+            // Create new house with the current nextId and the next unused biome (always lowercase)
             const newHouse: House = {
                 id: nextId,
                 biome: nextBiome,

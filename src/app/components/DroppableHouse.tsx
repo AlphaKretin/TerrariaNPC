@@ -4,6 +4,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 import { useTooltip } from "../hooks/useTooltip";
 import { NPC } from "../lib/NPCClass";
+import { toTitleCase } from "../utils/formatting";
 import NPCTooltip from "./NPCTooltip";
 
 // NPC price information
@@ -132,7 +133,7 @@ export default function DroppableHouse({
                 >
                     {biomes.map((biome) => (
                         <option key={biome} value={biome}>
-                            {biome}
+                            {toTitleCase(biome)}
                         </option>
                     ))}
                 </select>
