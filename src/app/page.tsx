@@ -758,6 +758,14 @@ export default function TerrariaHappinessCalculator() {
                             onRemoveNPC={(houseId, npc) => removeNPC(houseId, npc)}
                             getPriceDescription={getPriceDescription}
                             getPriceColor={getPriceColor}
+                            formatNpcName={formatNpcName}
+                            getLovedBiome={(npc) => getLovedBiome(toSnakeCase(npc))}
+                            getHatedBiome={(npc) => getHatedBiome(toSnakeCase(npc))}
+                            getNeutralBiomes={(npc) => getNeutralBiomes(toSnakeCase(npc))}
+                            getLovedNpcs={(npc) => getLovedNpcs(toSnakeCase(npc))}
+                            getLikedNpcs={(npc) => getLikedNpcs(toSnakeCase(npc))}
+                            getDislikedNpcs={(npc) => getDislikedNpcs(toSnakeCase(npc))}
+                            getHatedNpcs={(npc) => getHatedNpcs(toSnakeCase(npc))}
                         />
                     ))}
             </div>

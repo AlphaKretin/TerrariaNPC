@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTooltip } from "../hooks/useTooltip";
+import NPCTooltip from "./NPCTooltip";
 
 // NPC price information
 interface NpcPriceInfo {
@@ -26,6 +28,15 @@ interface DroppableHouseProps {
     onRemoveNPC: (houseId: number, npc?: string) => void; // Optional NPC parameter for removing one or all NPCs
     getPriceDescription: (sellPrice: number) => string;
     getPriceColor: (sellPrice: number) => string;
+    // NPC preference props
+    formatNpcName: (name: string) => string;
+    getLovedBiome: (npc: string) => string;
+    getHatedBiome: (npc: string) => string;
+    getNeutralBiomes?: (npc: string) => string[]; // Made optional since we don't display it
+    getLovedNpcs: (npc: string) => string[];
+    getLikedNpcs: (npc: string) => string[];
+    getDislikedNpcs: (npc: string) => string[];
+    getHatedNpcs: (npc: string) => string[];
 }
 
 export default function DroppableHouse({
@@ -37,8 +48,26 @@ export default function DroppableHouse({
     onRemoveNPC,
     getPriceDescription,
     getPriceColor,
+    formatNpcName,
+    getLovedBiome,
+    getHatedBiome,
+    getNeutralBiomes,
+    getLovedNpcs,
+    getLikedNpcs,
+    getDislikedNpcs,
+    getHatedNpcs,
 }: DroppableHouseProps) {
     const [isOver, setIsOver] = useState(false);
+
+    // Use the shared tooltip hook
+    const {
+        hoveredItem: hoveredNPC,
+        popupPosition,
+        isDragging,
+        setIsDragging,
+        handleMouseEnter: tooltipMouseEnter,
+        handleMouseLeave: tooltipMouseLeave,
+    } = useTooltip();
 
     // Handle the drag over event
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -55,6 +84,8 @@ export default function DroppableHouse({
     const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsOver(false);
+        // Reset dragging state on drop
+        setIsDragging(false);
 
         const npc = e.dataTransfer.getData("npc");
         if (npc) {
@@ -71,6 +102,16 @@ export default function DroppableHouse({
     // Remove all NPCs from this house
     const handleClearHouse = () => {
         onRemoveNPC(house.id); // Call removeNPC without an NPC parameter to clear all NPCs
+    };
+
+    // Handle NPC mouse hover events using our shared hook
+    const handleNpcMouseEnter = (npc: string, e: React.MouseEvent) => {
+        tooltipMouseEnter(npc, e);
+    };
+
+    // Emergency function to reset dragging state if tooltips get stuck
+    const resetDraggingState = () => {
+        setIsDragging(false);
     };
 
     return (
@@ -137,12 +178,16 @@ export default function DroppableHouse({
                                     if (e.currentTarget.classList) {
                                         e.currentTarget.classList.add("opacity-50");
                                     }
+                                    // Hide any active tooltips when dragging starts - handled by useTooltip hook
+                                    setIsDragging(true);
                                 }}
                                 onDragEnd={(e) => {
                                     // Remove opacity effect when drag ends
                                     if (e.currentTarget.classList) {
                                         e.currentTarget.classList.remove("opacity-50");
                                     }
+                                    // Explicitly reset the dragging state
+                                    setIsDragging(false);
                                 }}
                             >
                                 {/* NPC Header */}
@@ -159,7 +204,13 @@ export default function DroppableHouse({
 
                                 {/* NPC Sprite */}
                                 <div className="p-2 flex items-center justify-center">
-                                    <div className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors overflow-hidden">
+                                    <div
+                                        className="w-14 h-14 bg-slate-500 rounded-md flex items-center justify-center cursor-grab hover:bg-slate-400 transition-colors overflow-hidden"
+                                        onMouseEnter={(e) =>
+                                            handleNpcMouseEnter(npcInfo.npc.toLowerCase().replace(/\s+/g, "_"), e)
+                                        }
+                                        onMouseLeave={tooltipMouseLeave}
+                                    >
                                         <img
                                             src={`/sprites/${npcInfo.npc.toLowerCase().replace(/\s+/g, "_")}.webp`}
                                             alt={npcInfo.npc}
@@ -212,6 +263,20 @@ export default function DroppableHouse({
                     <p className="text-slate-400 text-center">Drag and drop NPCs here</p>
                 </div>
             )}
+
+            {/* Use the shared NPCTooltip component */}
+            <NPCTooltip
+                npc={hoveredNPC}
+                isDragging={isDragging}
+                popupPosition={popupPosition}
+                formatNpcName={formatNpcName}
+                getLovedBiome={getLovedBiome}
+                getHatedBiome={getHatedBiome}
+                getLovedNpcs={getLovedNpcs}
+                getLikedNpcs={getLikedNpcs}
+                getDislikedNpcs={getDislikedNpcs}
+                getHatedNpcs={getHatedNpcs}
+            />
         </div>
     );
 }
