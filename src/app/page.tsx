@@ -3,18 +3,7 @@
 import { useEffect, useState } from "react";
 import DroppableHouse from "./components/DroppableHouse";
 import NPCSpritesRow from "./components/NPCSpritesRow";
-
-// Define types for the JSON data structure - this will be used directly without transformation
-type NpcData = {
-    [npcKey: string]: {
-        npc: {
-            [relatedNpc: string]: number;
-        };
-        biome: {
-            [biomeName: string]: number;
-        };
-    };
-};
+import { NPC, NpcJson } from "./lib/NPCClass";
 
 // Define NPC price info type
 interface NpcPriceInfo {
@@ -37,11 +26,12 @@ export default function TerrariaHappinessCalculator() {
     const [totalHappiness, setTotalHappiness] = useState(0);
     const [selectedNPC, setSelectedNPC] = useState("");
     const [selectedBiome, setSelectedBiome] = useState("Forest");
-    const [npcData, setNpcData] = useState<NpcData>({});
+    const [npcData, setNpcData] = useState<NpcJson>({});
     const [biomes, setBiomes] = useState<string[]>([]); // Store dynamically extracted biomes
     const [isLoading, setIsLoading] = useState(true);
     const [nextId, setNextId] = useState(0); // To track the next available ID for new houses
     const [draggedNPC, setDraggedNPC] = useState<string | null>(null);
+    const [npcs, setNpcs] = useState<Map<string, NPC>>(new Map());
 
     // Load NPC data when component mounts
     useEffect(() => {
@@ -121,7 +111,7 @@ export default function TerrariaHappinessCalculator() {
             if (!response.ok) {
                 throw new Error(`Failed to load NPC data: ${response.status}`);
             }
-            const data: NpcData = await response.json();
+            const data: NpcJson = await response.json();
 
             // Extract all biomes from the NPC data
             const extractedBiomes = new Set<string>();
@@ -157,8 +147,15 @@ export default function TerrariaHappinessCalculator() {
                 setSelectedBiome(biomeList[0]);
             }
 
-            // Store the raw JSON data directly without transformation
+            // Store the raw JSON data for reference
             setNpcData(data);
+
+            // Create NPC objects from the JSON data
+            const npcObjects = new Map<string, NPC>();
+            Object.entries(data).forEach(([npcKey, npcData]) => {
+                npcObjects.set(npcKey, new NPC(npcKey, npcData));
+            });
+            setNpcs(npcObjects);
         } catch (error) {
             console.error("Error loading NPC data:", error);
             // Fallback to empty data if there's an error
@@ -166,107 +163,22 @@ export default function TerrariaHappinessCalculator() {
         }
     };
 
-    // Helper functions to work with the raw JSON format
-
-    // Format snake_case to Title Case (e.g., "arms_dealer" -> "Arms Dealer")
-    const formatNpcName = (npcKey: string): string => {
-        return npcKey
-            .split("_")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-    };
+    // Helper functions for convenience
 
     // Convert a display name (Title Case) back to snake_case key
     const toSnakeCase = (name: string): string => {
         return name.toLowerCase().replace(/\s+/g, "_");
     };
 
-    // Get biome preference type based on value (1 = loved, -1 = hated)
-    const getBiomePreferenceType = (value: number): string => {
-        if (value === 1) return "loves";
-        if (value === -1) return "hates";
-        return "neutral";
-    };
-
-    // Get NPC preference type based on value (1/2 = liked, -1/-2 = disliked)
-    const getNpcPreferenceType = (value: number): string => {
-        if (value === 2) return "loves";
-        if (value === 1) return "likes";
-        if (value === -1) return "dislikes";
-        if (value === -2) return "hates";
-        return "neutral";
-    };
-
-    // Get all NPCs that an NPC loves (value 2 in JSON)
-    const getLovedNpcs = (npc: string): string[] => {
-        if (!npcData[npc]?.npc) return [];
-
-        return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value === 2)
-            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
-    };
-
-    // Get all NPCs that an NPC likes (value 1 in JSON)
-    const getLikedNpcs = (npc: string): string[] => {
-        if (!npcData[npc]?.npc) return [];
-
-        return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value === 1)
-            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
-    };
-
-    // Get all NPCs that an NPC dislikes (value -1 in JSON)
-    const getDislikedNpcs = (npc: string): string[] => {
-        if (!npcData[npc]?.npc) return [];
-
-        return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value === -1)
-            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
-    };
-
-    // Get all NPCs that an NPC hates (value -2 in JSON)
-    const getHatedNpcs = (npc: string): string[] => {
-        if (!npcData[npc]?.npc) return [];
-
-        return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value === -2)
-            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
-    };
-
-    // Get the loved biome (value 1 in JSON)
-    const getLovedBiome = (npc: string): string => {
-        if (!npcData[npc]?.biome) return "Forest"; // Default
-
-        const lovedBiomes = Object.entries(npcData[npc].biome)
-            .filter(([_, value]) => value === 1)
-            .map(([biome, _]) => biome.charAt(0).toUpperCase() + biome.slice(1));
-
-        return lovedBiomes[0] || "Forest"; // Default to Forest if not found
-    };
-
-    // Get the hated biome (value -1 in JSON)
-    const getHatedBiome = (npc: string): string => {
-        if (!npcData[npc]?.biome) return "Desert"; // Default
-
-        const hatedBiomes = Object.entries(npcData[npc].biome)
-            .filter(([_, value]) => value === -1)
-            .map(([biome, _]) => biome.charAt(0).toUpperCase() + biome.slice(1));
-
-        return hatedBiomes[0] || "Desert"; // Default to Desert if not found
-    };
-
-    // Since biomes only have loved (1) and hated (-1) in the JSON data,
-    // we should remove the concept of "liked" and "disliked" biomes that don't exist in the data
-
-    // Neutral biomes - biomes that are neither loved nor hated
-    const getNeutralBiomes = (npc: string): string[] => {
-        if (!npcData[npc]?.biome) return ["Forest"];
-
-        const allBiomes = biomes.map((biome) => biome);
-        const lovedBiome = getLovedBiome(npc).toLowerCase();
-        const hatedBiome = getHatedBiome(npc).toLowerCase();
-
-        return allBiomes.filter((biome) => biome.toLowerCase() !== lovedBiome && biome.toLowerCase() !== hatedBiome);
+    // Format NPC ID to display name
+    const formatNpcName = (id: string): string => {
+        const npcObject = npcs.get(id);
+        return npcObject
+            ? npcObject.name
+            : id
+                  .split("_")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ");
     };
 
     // Find the first unused biome from the biomes list
@@ -368,38 +280,28 @@ export default function TerrariaHappinessCalculator() {
     const calculateSingleNpcPrices = (npc: string, house: House, currentPlacements = placements) => {
         // Get the snake_case version of the NPC name to use as key in npcData
         const npcKey = toSnakeCase(npc);
-        if (!npc || !npcData[npcKey]) return { buyPrice: 1.0, sellPrice: 1.0 };
+        const npcObject = npcs.get(npcKey);
+        if (!npc || !npcObject) return { buyPrice: 1.0, sellPrice: 1.0 };
 
         let priceMultiplier = 1.0;
 
         // Biome price modifiers
         // Check if the biome exists in the NPC's biome preferences
         const lowercaseBiome = house.biome.toLowerCase();
-        if (npcData[npcKey].biome && npcData[npcKey].biome[lowercaseBiome] !== undefined) {
-            const biomeValue = npcData[npcKey].biome[lowercaseBiome];
-
-            // Apply price modifications based on biome value
-            if (biomeValue === 1) {
-                // Loved biome (value = 1)
-                priceMultiplier *= 0.94;
-            } else if (biomeValue === -1) {
-                // Hated biome (value = -1)
-                priceMultiplier *= 1.12;
-            }
-        } else {
-            // For biomes not explicitly listed in preferences,
-            // They are neutral - no price modification needed
-            // Let's keep a default behavior just in case
-            const neutralBiomes = getNeutralBiomes(npcKey);
-            if (neutralBiomes.includes(house.biome)) {
-                // No change to prices for neutral biomes
-            }
-        }
 
         // Special case for Princess
         if (npc === "Princess") {
             // The Princess likes all biomes except hated ones
             if (house.biome !== "None") priceMultiplier *= 0.94;
+        } else {
+            // For regular NPCs, check their biome preferences
+            if (lowercaseBiome === npcObject.likedBiome) {
+                // Liked biome
+                priceMultiplier *= 0.94;
+            } else if (lowercaseBiome === npcObject.dislikedBiome) {
+                // Disliked biome
+                priceMultiplier *= 1.12;
+            }
         }
 
         // Price modifiers based on other NPCs in the same house (internal neighbors)
@@ -414,16 +316,14 @@ export default function TerrariaHappinessCalculator() {
             }
 
             // Check relationship with other NPCs in the same house
-            if (npcData[npcKey]?.npc && npcData[npcKey].npc[otherNpcKey] !== undefined) {
-                const relationValue = npcData[npcKey].npc[otherNpcKey];
-
-                if (relationValue > 0) {
-                    // Positive relationship (likes/loves) - stronger effect for same house
-                    priceMultiplier *= 0.9; // Stronger effect than external neighbors
-                } else if (relationValue < 0) {
-                    // Negative relationship (dislikes/hates) - stronger effect for same house
-                    priceMultiplier *= 1.1; // Stronger effect than external neighbors
-                }
+            if (npcObject.lovedNpcs.includes(otherNpcKey)) {
+                priceMultiplier *= 0.9; // Loves - stronger effect for same house
+            } else if (npcObject.likedNpcs.includes(otherNpcKey)) {
+                priceMultiplier *= 0.9; // Likes - stronger effect for same house
+            } else if (npcObject.dislikedNpcs.includes(otherNpcKey)) {
+                priceMultiplier *= 1.1; // Dislikes - stronger effect for same house
+            } else if (npcObject.hatedNpcs.includes(otherNpcKey)) {
+                priceMultiplier *= 1.1; // Hates - stronger effect for same house
             }
         });
 
@@ -440,17 +340,15 @@ export default function TerrariaHappinessCalculator() {
                     return;
                 }
 
-                // Check if the neighbor NPC is in the preferences
-                if (npcData[npcKey]?.npc && npcData[npcKey].npc[neighborKey] !== undefined) {
-                    const relationValue = npcData[npcKey].npc[neighborKey];
-
-                    if (relationValue > 0) {
-                        // Positive relationship (likes/loves)
-                        priceMultiplier *= 0.94;
-                    } else if (relationValue < 0) {
-                        // Negative relationship (dislikes/hates)
-                        priceMultiplier *= 1.06;
-                    }
+                // Check relationships with neighbor NPCs
+                if (npcObject.lovedNpcs.includes(neighborKey)) {
+                    priceMultiplier *= 0.94; // Loves
+                } else if (npcObject.likedNpcs.includes(neighborKey)) {
+                    priceMultiplier *= 0.94; // Likes
+                } else if (npcObject.dislikedNpcs.includes(neighborKey)) {
+                    priceMultiplier *= 1.06; // Dislikes
+                } else if (npcObject.hatedNpcs.includes(neighborKey)) {
+                    priceMultiplier *= 1.06; // Hates
                 }
             });
         });
@@ -721,14 +619,7 @@ export default function TerrariaHappinessCalculator() {
                     npcData={npcData}
                     placedNPCs={placements.flatMap((house) => house.npcPrices.map((info) => info.npc))}
                     onDragStart={(npc, e) => handleNpcDragStart(npc, e)}
-                    formatNpcName={formatNpcName}
-                    getLovedBiome={(npc) => getLovedBiome(toSnakeCase(npc))}
-                    getHatedBiome={(npc) => getHatedBiome(toSnakeCase(npc))}
-                    getNeutralBiomes={(npc) => getNeutralBiomes(toSnakeCase(npc))}
-                    getLovedNpcs={(npc) => getLovedNpcs(toSnakeCase(npc))}
-                    getLikedNpcs={(npc) => getLikedNpcs(toSnakeCase(npc))}
-                    getDislikedNpcs={(npc) => getDislikedNpcs(toSnakeCase(npc))}
-                    getHatedNpcs={(npc) => getHatedNpcs(toSnakeCase(npc))}
+                    npcs={npcs}
                 />
 
                 <div className="flex justify-between items-center mt-6">
@@ -758,14 +649,7 @@ export default function TerrariaHappinessCalculator() {
                             onRemoveNPC={(houseId, npc) => removeNPC(houseId, npc)}
                             getPriceDescription={getPriceDescription}
                             getPriceColor={getPriceColor}
-                            formatNpcName={formatNpcName}
-                            getLovedBiome={(npc) => getLovedBiome(toSnakeCase(npc))}
-                            getHatedBiome={(npc) => getHatedBiome(toSnakeCase(npc))}
-                            getNeutralBiomes={(npc) => getNeutralBiomes(toSnakeCase(npc))}
-                            getLovedNpcs={(npc) => getLovedNpcs(toSnakeCase(npc))}
-                            getLikedNpcs={(npc) => getLikedNpcs(toSnakeCase(npc))}
-                            getDislikedNpcs={(npc) => getDislikedNpcs(toSnakeCase(npc))}
-                            getHatedNpcs={(npc) => getHatedNpcs(toSnakeCase(npc))}
+                            npcs={npcs}
                         />
                     ))}
             </div>

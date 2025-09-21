@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useTooltip } from "../hooks/useTooltip";
+import { NPC } from "../lib/NPCClass";
 import NPCTooltip from "./NPCTooltip";
 
 // NPC price information
@@ -28,15 +29,8 @@ interface DroppableHouseProps {
     onRemoveNPC: (houseId: number, npc?: string) => void; // Optional NPC parameter for removing one or all NPCs
     getPriceDescription: (sellPrice: number) => string;
     getPriceColor: (sellPrice: number) => string;
-    // NPC preference props
-    formatNpcName: (name: string) => string;
-    getLovedBiome: (npc: string) => string;
-    getHatedBiome: (npc: string) => string;
-    getNeutralBiomes?: (npc: string) => string[]; // Made optional since we don't display it
-    getLovedNpcs: (npc: string) => string[];
-    getLikedNpcs: (npc: string) => string[];
-    getDislikedNpcs: (npc: string) => string[];
-    getHatedNpcs: (npc: string) => string[];
+    // Collection of NPC objects
+    npcs: Map<string, NPC>;
 }
 
 export default function DroppableHouse({
@@ -48,14 +42,7 @@ export default function DroppableHouse({
     onRemoveNPC,
     getPriceDescription,
     getPriceColor,
-    formatNpcName,
-    getLovedBiome,
-    getHatedBiome,
-    getNeutralBiomes,
-    getLovedNpcs,
-    getLikedNpcs,
-    getDislikedNpcs,
-    getHatedNpcs,
+    npcs,
 }: DroppableHouseProps) {
     const [isOver, setIsOver] = useState(false);
 
@@ -265,18 +252,7 @@ export default function DroppableHouse({
             )}
 
             {/* Use the shared NPCTooltip component */}
-            <NPCTooltip
-                npc={hoveredNPC}
-                isDragging={isDragging}
-                popupPosition={popupPosition}
-                formatNpcName={formatNpcName}
-                getLovedBiome={getLovedBiome}
-                getHatedBiome={getHatedBiome}
-                getLovedNpcs={getLovedNpcs}
-                getLikedNpcs={getLikedNpcs}
-                getDislikedNpcs={getDislikedNpcs}
-                getHatedNpcs={getHatedNpcs}
-            />
+            <NPCTooltip npc={hoveredNPC} isDragging={isDragging} popupPosition={popupPosition} npcs={npcs} />
         </div>
     );
 }

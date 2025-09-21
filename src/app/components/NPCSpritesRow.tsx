@@ -2,46 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTooltip } from "../hooks/useTooltip";
+import { NPC, NpcJson } from "../lib/NPCClass";
 import NPCTooltip from "./NPCTooltip";
 
-type NpcData = {
-    [npcKey: string]: {
-        npc: {
-            [relatedNpc: string]: number;
-        };
-        biome: {
-            [biomeName: string]: number;
-        };
-    };
-};
-
 interface NPCSpritesRowProps {
-    npcData: NpcData;
+    npcData: NpcJson;
     placedNPCs: string[]; // Array of already placed NPCs
     onDragStart: (npc: string, e: React.DragEvent<HTMLDivElement>) => void;
-    formatNpcName: (name: string) => string;
-    getLovedBiome: (npc: string) => string;
-    getHatedBiome: (npc: string) => string;
-    getNeutralBiomes?: (npc: string) => string[]; // Made optional since we don't display it
-    getLovedNpcs: (npc: string) => string[];
-    getLikedNpcs: (npc: string) => string[];
-    getDislikedNpcs: (npc: string) => string[];
-    getHatedNpcs: (npc: string) => string[];
+    npcs: Map<string, NPC>;
 }
 
-export default function NPCSpritesRow({
-    npcData,
-    placedNPCs,
-    onDragStart,
-    formatNpcName,
-    getLovedBiome,
-    getHatedBiome,
-    getNeutralBiomes, // We'll keep this but won't use it for display
-    getLovedNpcs,
-    getLikedNpcs,
-    getDislikedNpcs,
-    getHatedNpcs,
-}: NPCSpritesRowProps) {
+export default function NPCSpritesRow({ npcData, placedNPCs, onDragStart, npcs }: NPCSpritesRowProps) {
     // Tooltip functionality from our custom hook
     const {
         hoveredItem: hoveredNPC,
@@ -77,6 +48,17 @@ export default function NPCSpritesRow({
         const x = e.pageX - scrollRef.current.offsetLeft;
         const walk = (x - startX) * 2; // Scroll speed multiplier
         scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    // Helper function to format NPC name
+    const formatNpcName = (id: string): string => {
+        const npcObject = npcs.get(id);
+        return npcObject
+            ? npcObject.name
+            : id
+                  .split("_")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ");
     };
 
     // Handle cleanup of event listeners
@@ -131,18 +113,7 @@ export default function NPCSpritesRow({
             </div>
 
             {/* Use the shared NPCTooltip component */}
-            <NPCTooltip
-                npc={hoveredNPC}
-                isDragging={isDragging}
-                popupPosition={popupPosition}
-                formatNpcName={formatNpcName}
-                getLovedBiome={getLovedBiome}
-                getHatedBiome={getHatedBiome}
-                getLovedNpcs={getLovedNpcs}
-                getLikedNpcs={getLikedNpcs}
-                getDislikedNpcs={getDislikedNpcs}
-                getHatedNpcs={getHatedNpcs}
-            />
+            <NPCTooltip npc={hoveredNPC} isDragging={isDragging} popupPosition={popupPosition} npcs={npcs} />
         </div>
     );
 }

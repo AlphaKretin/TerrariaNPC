@@ -1,5 +1,7 @@
 "use client";
 
+import { NPC } from "../lib/NPCClass";
+
 interface NPCTooltipProps {
     npc: string | null;
     isDragging: boolean;
@@ -9,38 +11,17 @@ interface NPCTooltipProps {
         position: "above" | "below";
         arrowX: number; // X position where arrow should point
     };
-    formatNpcName: (name: string) => string;
-    getLovedBiome: (npc: string) => string;
-    getHatedBiome: (npc: string) => string;
-    getLovedNpcs: (npc: string) => string[];
-    getLikedNpcs: (npc: string) => string[];
-    getDislikedNpcs: (npc: string) => string[];
-    getHatedNpcs: (npc: string) => string[];
+    npcs: Map<string, NPC>;
 }
 
-export default function NPCTooltip({
-    npc,
-    isDragging,
-    popupPosition,
-    formatNpcName,
-    getLovedBiome,
-    getHatedBiome,
-    getLovedNpcs,
-    getLikedNpcs,
-    getDislikedNpcs,
-    getHatedNpcs,
-}: NPCTooltipProps) {
+export default function NPCTooltip({ npc, isDragging, popupPosition, npcs }: NPCTooltipProps) {
     if (!npc || isDragging) return null;
 
-    // Helper function to check if an NPC relationship list is empty
-    const hasRelationships = (npc: string): boolean => {
-        return (
-            getLovedNpcs(npc).length > 0 ||
-            getLikedNpcs(npc).length > 0 ||
-            getDislikedNpcs(npc).length > 0 ||
-            getHatedNpcs(npc).length > 0
-        );
-    };
+    // Get snake_case version of the NPC name
+    const npcKey = npc.toLowerCase().replace(/\s+/g, "_");
+    const npcObject = npcs.get(npcKey);
+
+    if (!npcObject) return null;
 
     return (
         <div
@@ -78,43 +59,43 @@ export default function NPCTooltip({
                 }}
             ></div>
 
-            <div className="text-center mb-2 font-bold text-white">{formatNpcName(npc)}</div>
+            <div className="text-center mb-2 font-bold text-white">{npcObject.name}</div>
             <div className="gap-2 text-sm">
                 <div className="mb-2">
                     <div className="font-semibold mb-1">Biome Preferences:</div>
                     <p>
-                        <span className="text-green-300">Likes:</span> {getLovedBiome(npc)}
+                        <span className="text-green-300">Likes:</span> {npcObject.likedBiome}
                     </p>
                     <p>
-                        <span className="text-orange-400">Dislikes:</span> {getHatedBiome(npc)}
+                        <span className="text-orange-400">Dislikes:</span> {npcObject.dislikedBiome}
                     </p>
                 </div>
 
-                {hasRelationships(npc) && (
+                {npcObject.hasRelationships() && (
                     <div>
                         <div className="border-t border-slate-600 my-2"></div>
                         <div className="font-semibold mb-1">NPC Relationships:</div>
-                        {getLovedNpcs(npc).length > 0 && (
+                        {npcObject.lovedNpcs.length > 0 && (
                             <p>
-                                <span className="text-green-500">Loves:</span> {getLovedNpcs(npc).join(", ")}
+                                <span className="text-green-500">Loves:</span> {npcObject.lovedNpcs.join(", ")}
                             </p>
                         )}
 
-                        {getLikedNpcs(npc).length > 0 && (
+                        {npcObject.likedNpcs.length > 0 && (
                             <p>
-                                <span className="text-green-300">Likes:</span> {getLikedNpcs(npc).join(", ")}
+                                <span className="text-green-300">Likes:</span> {npcObject.likedNpcs.join(", ")}
                             </p>
                         )}
 
-                        {getDislikedNpcs(npc).length > 0 && (
+                        {npcObject.dislikedNpcs.length > 0 && (
                             <p>
-                                <span className="text-orange-400">Dislikes:</span> {getDislikedNpcs(npc).join(", ")}
+                                <span className="text-orange-400">Dislikes:</span> {npcObject.dislikedNpcs.join(", ")}
                             </p>
                         )}
 
-                        {getHatedNpcs(npc).length > 0 && (
+                        {npcObject.hatedNpcs.length > 0 && (
                             <p>
-                                <span className="text-red-400">Hates:</span> {getHatedNpcs(npc).join(", ")}
+                                <span className="text-red-400">Hates:</span> {npcObject.hatedNpcs.join(", ")}
                             </p>
                         )}
                     </div>
