@@ -161,7 +161,9 @@ export default function TerrariaHappinessCalculator() {
             return house.npcPrices.length > 0 ? sum + house.sellPrice : sum;
         }, 0);
 
-        const avg = total / placements.length;
+        const fullPlacements = placements.filter((p) => p.npcPrices.length > 0);
+
+        const avg = total / fullPlacements.length;
 
         // Update total happiness (now representing total sell price modifier)
         settAverageHappiness(parseFloat((avg || 0).toFixed(2)));
