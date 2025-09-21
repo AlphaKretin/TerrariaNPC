@@ -189,21 +189,39 @@ export default function TerrariaHappinessCalculator() {
         return "neutral";
     };
 
-    // Get all NPCs that an NPC likes (positive value in JSON)
+    // Get all NPCs that an NPC loves (value 2 in JSON)
+    const getLovedNpcs = (npc: string): string[] => {
+        if (!npcData[npc]?.npc) return [];
+
+        return Object.entries(npcData[npc].npc)
+            .filter(([_, value]) => value === 2)
+            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
+    };
+
+    // Get all NPCs that an NPC likes (value 1 in JSON)
     const getLikedNpcs = (npc: string): string[] => {
         if (!npcData[npc]?.npc) return [];
 
         return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value > 0)
+            .filter(([_, value]) => value === 1)
             .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
     };
 
-    // Get all NPCs that an NPC dislikes (negative value in JSON)
+    // Get all NPCs that an NPC dislikes (value -1 in JSON)
     const getDislikedNpcs = (npc: string): string[] => {
         if (!npcData[npc]?.npc) return [];
 
         return Object.entries(npcData[npc].npc)
-            .filter(([_, value]) => value < 0)
+            .filter(([_, value]) => value === -1)
+            .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
+    };
+
+    // Get all NPCs that an NPC hates (value -2 in JSON)
+    const getHatedNpcs = (npc: string): string[] => {
+        if (!npcData[npc]?.npc) return [];
+
+        return Object.entries(npcData[npc].npc)
+            .filter(([_, value]) => value === -2)
             .map(([relatedNpc, _]) => formatNpcName(relatedNpc));
     };
 
@@ -229,16 +247,18 @@ export default function TerrariaHappinessCalculator() {
         return hatedBiomes[0] || "Desert"; // Default to Desert if not found
     };
 
-    // For UI display purposes - get other preferred biomes
-    const getLikedBiome = (npc: string): string => {
-        const loved = getLovedBiome(npc);
-        return loved === "Forest" ? "Ocean" : "Forest"; // Simple logic for liked biome
-    };
+    // Since biomes only have loved (1) and hated (-1) in the JSON data,
+    // we should remove the concept of "liked" and "disliked" biomes that don't exist in the data
 
-    // For UI display purposes - get other disliked biomes
-    const getDislikedBiome = (npc: string): string => {
-        const hated = getHatedBiome(npc);
-        return hated === "Desert" ? "Snow" : "Desert"; // Simple logic for disliked biome
+    // Neutral biomes - biomes that are neither loved nor hated
+    const getNeutralBiomes = (npc: string): string[] => {
+        if (!npcData[npc]?.biome) return ["Forest"];
+
+        const allBiomes = biomes.map((biome) => biome);
+        const lovedBiome = getLovedBiome(npc).toLowerCase();
+        const hatedBiome = getHatedBiome(npc).toLowerCase();
+
+        return allBiomes.filter((biome) => biome.toLowerCase() !== lovedBiome && biome.toLowerCase() !== hatedBiome);
     };
 
     // Find the first unused biome from the biomes list
@@ -358,9 +378,12 @@ export default function TerrariaHappinessCalculator() {
             }
         } else {
             // For biomes not explicitly listed in preferences,
-            // Check if it's a liked or disliked biome based on our helper functions
-            if (house.biome === getLikedBiome(npcKey)) happiness *= 0.96;
-            else if (house.biome === getDislikedBiome(npcKey)) happiness *= 1.06;
+            // They are neutral - no happiness modification needed
+            // Let's keep a default behavior just in case
+            const neutralBiomes = getNeutralBiomes(npcKey);
+            if (neutralBiomes.includes(house.biome)) {
+                // No change to happiness for neutral biomes
+            }
         }
 
         // Special case for Princess
@@ -681,11 +704,12 @@ export default function TerrariaHappinessCalculator() {
                     onDragStart={(npc, e) => handleNpcDragStart(npc, e)}
                     formatNpcName={formatNpcName}
                     getLovedBiome={(npc) => getLovedBiome(toSnakeCase(npc))}
-                    getLikedBiome={(npc) => getLikedBiome(toSnakeCase(npc))}
-                    getDislikedBiome={(npc) => getDislikedBiome(toSnakeCase(npc))}
                     getHatedBiome={(npc) => getHatedBiome(toSnakeCase(npc))}
+                    getNeutralBiomes={(npc) => getNeutralBiomes(toSnakeCase(npc))}
+                    getLovedNpcs={(npc) => getLovedNpcs(toSnakeCase(npc))}
                     getLikedNpcs={(npc) => getLikedNpcs(toSnakeCase(npc))}
                     getDislikedNpcs={(npc) => getDislikedNpcs(toSnakeCase(npc))}
+                    getHatedNpcs={(npc) => getHatedNpcs(toSnakeCase(npc))}
                 />
 
                 <div className="flex justify-between items-center mt-6">

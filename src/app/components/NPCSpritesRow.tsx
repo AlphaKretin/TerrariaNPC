@@ -16,11 +16,12 @@ type NpcData = {
 interface NpcPreferencesPopup {
     npc: string;
     lovedBiome: string;
-    likedBiome: string;
-    dislikedBiome: string;
     hatedBiome: string;
+    neutralBiomes: string[];
     lovedNpcs: string[];
+    likedNpcs: string[];
     dislikedNpcs: string[];
+    hatedNpcs: string[];
 }
 
 interface NPCSpritesRowProps {
@@ -29,11 +30,12 @@ interface NPCSpritesRowProps {
     onDragStart: (npc: string, e: React.DragEvent<HTMLDivElement>) => void;
     formatNpcName: (name: string) => string;
     getLovedBiome: (npc: string) => string;
-    getLikedBiome: (npc: string) => string;
-    getDislikedBiome: (npc: string) => string;
     getHatedBiome: (npc: string) => string;
+    getNeutralBiomes?: (npc: string) => string[]; // Made optional since we don't display it
+    getLovedNpcs: (npc: string) => string[];
     getLikedNpcs: (npc: string) => string[];
     getDislikedNpcs: (npc: string) => string[];
+    getHatedNpcs: (npc: string) => string[];
 }
 
 export default function NPCSpritesRow({
@@ -42,11 +44,12 @@ export default function NPCSpritesRow({
     onDragStart,
     formatNpcName,
     getLovedBiome,
-    getLikedBiome,
-    getDislikedBiome,
     getHatedBiome,
+    getNeutralBiomes, // We'll keep this but won't use it for display
+    getLovedNpcs,
     getLikedNpcs,
     getDislikedNpcs,
+    getHatedNpcs,
 }: NPCSpritesRowProps) {
     const [hoveredNPC, setHoveredNPC] = useState<string | null>(null);
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
@@ -90,6 +93,16 @@ export default function NPCSpritesRow({
         const x = e.pageX - scrollRef.current.offsetLeft;
         const walk = (x - startX) * 2; // Scroll speed multiplier
         scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
+    // Helper function to check if an NPC relationship list is empty
+    const hasRelationships = (npc: string): boolean => {
+        return (
+            getLovedNpcs(npc).length > 0 ||
+            getLikedNpcs(npc).length > 0 ||
+            getDislikedNpcs(npc).length > 0 ||
+            getHatedNpcs(npc).length > 0
+        );
     };
 
     // Handle cleanup of event listeners
@@ -139,39 +152,60 @@ export default function NPCSpritesRow({
             {/* Tooltip/popup for NPC preferences */}
             {hoveredNPC && (
                 <div
-                    className="absolute bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg z-50 w-64"
+                    className="absolute bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg z-50"
                     style={{
                         left: `${popupPosition.x}px`,
                         top: `${popupPosition.y - 10}px`,
                         transform: "translate(-50%, -100%)",
+                        minWidth: "220px",
+                        maxWidth: "300px",
                     }}
                 >
                     <div className="text-center mb-2 font-bold text-white">{formatNpcName(hoveredNPC)}</div>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
+                    <div className="gap-2 text-sm">
+                        <div className="mb-2">
+                            <div className="font-semibold mb-1">Biome Preferences:</div>
                             <p>
-                                <span className="text-green-400">Loves:</span> {getLovedBiome(hoveredNPC)}
+                                <span className="text-green-300">Likes:</span> {getLovedBiome(hoveredNPC)}
                             </p>
                             <p>
-                                <span className="text-green-300">Likes:</span> {getLikedBiome(hoveredNPC)}
-                            </p>
-                            <p>
-                                <span className="text-orange-400">Dislikes:</span> {getDislikedBiome(hoveredNPC)}
-                            </p>
-                            <p>
-                                <span className="text-red-400">Hates:</span> {getHatedBiome(hoveredNPC)}
+                                <span className="text-orange-400">Dislikes:</span> {getHatedBiome(hoveredNPC)}
                             </p>
                         </div>
-                        <div>
-                            <p>
-                                <span className="text-green-400">Friends:</span>{" "}
-                                {getLikedNpcs(hoveredNPC).join(", ") || "None"}
-                            </p>
-                            <p>
-                                <span className="text-red-400">Enemies:</span>{" "}
-                                {getDislikedNpcs(hoveredNPC).join(", ") || "None"}
-                            </p>
-                        </div>
+
+                        {hasRelationships(hoveredNPC) && (
+                            <div>
+                                <div className="border-t border-slate-600 my-2"></div>
+                                <div className="font-semibold mb-1">NPC Relationships:</div>
+                                {getLovedNpcs(hoveredNPC).length > 0 && (
+                                    <p>
+                                        <span className="text-green-500">Loves:</span>{" "}
+                                        {getLovedNpcs(hoveredNPC).join(", ")}
+                                    </p>
+                                )}
+
+                                {getLikedNpcs(hoveredNPC).length > 0 && (
+                                    <p>
+                                        <span className="text-green-300">Likes:</span>{" "}
+                                        {getLikedNpcs(hoveredNPC).join(", ")}
+                                    </p>
+                                )}
+
+                                {getDislikedNpcs(hoveredNPC).length > 0 && (
+                                    <p>
+                                        <span className="text-orange-400">Dislikes:</span>{" "}
+                                        {getDislikedNpcs(hoveredNPC).join(", ")}
+                                    </p>
+                                )}
+
+                                {getHatedNpcs(hoveredNPC).length > 0 && (
+                                    <p>
+                                        <span className="text-red-400">Hates:</span>{" "}
+                                        {getHatedNpcs(hoveredNPC).join(", ")}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
